@@ -37,6 +37,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
     @ManyToOne
-    @JoinColumn(name = "vehicule_id") // Nom de la colonne de clé étrangère dans la table User (Chauffeur)
-    private Vehicule vehicule;
+    @JoinColumn(name = "vehicule_id")
+    private Vehicule vehicule; // Véhicule assigné à cet utilisateur (chauffeur)
 }

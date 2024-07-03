@@ -37,6 +37,7 @@ public class Livraison {
     private BigDecimal prix;
     private String description;
     @ManyToOne
-    @JoinColumn(name = "vehicule_id") // Nom de la colonne de clé étrangère dans la table Livraison
-    private Vehicule vehicule;
+    @JoinColumn(name = "chauffeur_id")
+    private User chauffeur; // Chauffeur assigné à la livraison
+
 }
