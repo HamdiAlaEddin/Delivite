@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,13 +21,11 @@ public class Vehicule {
     private String marque;
     private String modele;
     private String immatriculation;
-
     @Enumerated(EnumType.STRING)
     private TypeVehicule type;
-
     private String couleur;
-
+    @ManyToMany(mappedBy = "vehicules")
+    private List<Livraison> livraisons = new ArrayList<>();
     @OneToMany(mappedBy = "vehicule")
-    private List<User> chauffeurs;
-
+    private List<User> chauffeurs = new ArrayList<>();
 }

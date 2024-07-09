@@ -6,9 +6,7 @@ import tn.solixy.delivite.entities.Role;
 import tn.solixy.delivite.entities.RoleName;
 import tn.solixy.delivite.entities.User;
 
-import java.util.List;
-
 @Repository
-public interface IUserRepository extends JpaRepository<User,Long> {
-    public List<User> findByRole(Role role);
+public interface IRoleRepository  extends JpaRepository<Role,Long> {
+    Role findByRole(RoleName roleName);
 }

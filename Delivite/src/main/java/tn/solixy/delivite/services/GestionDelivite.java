@@ -1,28 +1,58 @@
 package tn.solixy.delivite.services;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tn.solixy.delivite.entities.Livraison;
-import tn.solixy.delivite.entities.Role;
-import tn.solixy.delivite.entities.User;
-import tn.solixy.delivite.entities.Vehicule;
+import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.repositories.ILivraisonRepository;
+import tn.solixy.delivite.repositories.IRoleRepository;
 import tn.solixy.delivite.repositories.IUserRepository;
 import tn.solixy.delivite.repositories.IVehiculeRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class GestionDelivite implements IGestionDelivite {
 
-
-    @Autowired
     ILivraisonRepository iLivraisonRepository;
     IUserRepository iUserRepository;
     IVehiculeRepository iVehiculeRepository;
+    IRoleRepository iRoleRepository;
+
+    @Override
+     public List<Map<String, Object>> getAll() {
+            List<User> users = iUserRepository.findAll();
+            return users.stream()
+                    .map(this::convertToMap)
+                    .collect(Collectors.toList());
+        }
+    @Override
+        public Map<String, Object> convertToMap(User us) {
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("userId", us.getUserID());
+            userMap.put("email", us.getEmail());
+            userMap.put("firstName", us.getFirstName());
+            userMap.put("lastName", us.getLastName());
+            userMap.put("role", us.getRole());
+
+
+            if (us.getRole().getRole() == RoleName.Chauffeur) {
+                userMap.put("drivingLicenseNumber", us.getNumPermisConduit());
+                userMap.put("rate", us.getRate());
+                userMap.put("vehicle", us.getVehicule());
+            } else {
+                userMap.put("drivingLicenseNumber", "");
+                userMap.put("rate", 0);
+                userMap.put("vehicle", null);
+            }
+
+            return userMap;
+        }
+
     @Override
     public List<User> retrieveAllUsers() {
         return iUserRepository.findAll();
@@ -77,8 +107,15 @@ public class GestionDelivite implements IGestionDelivite {
     }
     @Override
     public User addUser(User user) {
-        return null;
+        // Assurez-vous que le rôle existe
+        Role role = iRoleRepository.findByRole(user.getRole().getRole());
+        if (role == null) {
+            throw new IllegalArgumentException("Invalid role: " + user.getRole().getRole());
+        }
+        user.setRole(role);
+        return iUserRepository.save(user);
     }
+
 
     public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
         chauffeur.setVehicule(vehicule);
@@ -87,6 +124,11 @@ public class GestionDelivite implements IGestionDelivite {
     public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
         livraison.setChauffeur(chauffeur);
         return iLivraisonRepository.save(livraison);
+    }
+    @Override
+    public List<User> findByRole(RoleName roleName) {
+        Role r = iRoleRepository.findByRole(roleName);
+        return iUserRepository.findByRole(r);
     }
 
 }

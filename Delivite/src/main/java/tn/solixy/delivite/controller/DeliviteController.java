@@ -3,14 +3,11 @@ package tn.solixy.delivite.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import tn.solixy.delivite.entities.Livraison;
-import tn.solixy.delivite.entities.Role;
-import tn.solixy.delivite.entities.User;
-import tn.solixy.delivite.entities.Vehicule;
+import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.IGestionDelivite;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -19,13 +16,19 @@ import java.util.List;
 public class DeliviteController {
     @Autowired
     IGestionDelivite service;
-    @GetMapping("/getallUsers")
-    public List<User> getAll(){
-        return service.retrieveAllUsers();
+    @GetMapping("/role/{roleName}")
+    public List<User> getUsersByRole(@PathVariable RoleName roleName) {
+        return service.findByRole(roleName);
     }
-    @GetMapping("/getUsers/{role}")
-    public List<User> getAllUserByRole(@PathVariable("role") Role role){
-        return service.retrieveAllUsersByRole(role);
+
+    @GetMapping("/allUsers")
+    public List<Map<String, Object>> getAllUsers() {
+        return service.getAll();
+    }
+
+    @PostMapping("/addUser")
+    public User addUser(@RequestBody User user) {
+        return service.addUser(user);
     }
     @GetMapping("/getallLivraison")
     public List<Livraison> getAllLivraison(){
@@ -47,7 +50,6 @@ public class DeliviteController {
     public Vehicule updateVehicule(@RequestBody Vehicule vehicule){
         return  service.updateVehicule(vehicule);
     }
-
     @DeleteMapping("/deleteUser/{id}")
     public void deleteU(@PathVariable("id") Long Uid){
         service.DeleteUser(Uid);

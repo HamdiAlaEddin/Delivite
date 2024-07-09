@@ -1,11 +1,9 @@
 package tn.solixy.delivite.services;
 
-import tn.solixy.delivite.entities.Livraison;
-import tn.solixy.delivite.entities.Role;
-import tn.solixy.delivite.entities.User;
-import tn.solixy.delivite.entities.Vehicule;
+import tn.solixy.delivite.entities.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IGestionDelivite {
     User addUser(User user);
@@ -23,5 +21,8 @@ public interface IGestionDelivite {
     public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur);
     public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule);
 
+    public List<Map<String, Object>> getAll() ;
+     Map<String, Object> convertToMap(User us);
+    public List<User> findByRole(RoleName roleName);
 
 }
