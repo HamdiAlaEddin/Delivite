@@ -8,8 +8,6 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,4 +37,6 @@ public class Livraison {
     private String description;
     private Long id_chauffeur;
     private Long id_vehicule;
+    @OneToMany(mappedBy = "livr")
+    private List<LogHisorique> loghs;
 }

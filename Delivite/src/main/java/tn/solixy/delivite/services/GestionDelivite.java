@@ -2,16 +2,12 @@ package tn.solixy.delivite.services;
 
 import com.cloudinary.utils.ObjectUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
-import tn.solixy.delivite.repositories.IImageRepository;
-import tn.solixy.delivite.repositories.ILivraisonRepository;
-import tn.solixy.delivite.repositories.IUserRepository;
-import tn.solixy.delivite.repositories.IVehiculeRepository;
+import tn.solixy.delivite.repositories.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,6 +22,7 @@ public class GestionDelivite implements IGestionDelivite {
     ILivraisonRepository iLivraisonRepository;
     IUserRepository iUserRepository;
     IVehiculeRepository iVehiculeRepository;
+    ILogHistorique iLogHistorique;
      CloudinaryService cloudinaryService;
      IImageRepository imageRepository;
    /* @Override
@@ -177,5 +174,29 @@ public class GestionDelivite implements IGestionDelivite {
     @Override
     public List<User> findByRole(Role role) {
         return iUserRepository.findByRole(role);
+    }
+    @Override
+    public LogHisorique addLog(LogHisorique lh) {
+        return iLogHistorique.save(lh);
+    }
+
+    @Override
+    public List<LogHisorique> GetAllLog() {
+        return iLogHistorique.findAll();
+    }
+
+    @Override
+    public LogHisorique GetLogbyId(Long ilh) {
+        return iLogHistorique.findById(ilh).get();
+    }
+
+    @Override
+    public LogHisorique UpdateLog(LogHisorique lh) {
+        return iLogHistorique.save(lh);
+    }
+
+    @Override
+    public void DeleteLog(Long ilh) {
+      iLogHistorique.deleteById(ilh);
     }
 }

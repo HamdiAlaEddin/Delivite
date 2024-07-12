@@ -12,6 +12,12 @@ public interface IGestionDelivite {
     ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile);
     public Vehicule addVehicule(Vehicule vehicule);
     public Livraison addLivraison(Livraison livraison);
+     LogHisorique addLog(LogHisorique lh);
+    List<LogHisorique> GetAllLog();
+    LogHisorique GetLogbyId(Long ilh);
+    LogHisorique UpdateLog(LogHisorique lh);
+    void DeleteLog(Long ilh);
+
     Livraison getLivraisonById(Long idL);
     User getUserById(Long idU);
     Vehicule getVehiculeById(Long idV);

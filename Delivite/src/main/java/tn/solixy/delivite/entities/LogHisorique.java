@@ -20,5 +20,9 @@ public class LogHisorique {
     private Incident incident;
     @ManyToOne
     @JoinColumn(name = "livraison_id")
-    private Livraison livraison; // Relation avec la livraison
+    private Livraison livr; // Relation avec la livraison
+
+    @ManyToOne
+    @JoinColumn(name = "Vehicule_id")
+    private Vehicule vehic;
 }

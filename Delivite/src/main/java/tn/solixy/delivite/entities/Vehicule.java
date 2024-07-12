@@ -26,6 +26,7 @@ public class Vehicule {
     private String couleur;
     //@OneToMany(mappedBy = "vehicule", cascade = CascadeType.ALL)
     //private List<User> chauffeurs = new ArrayList<>();
-
+    @OneToMany(mappedBy = "vehic")
+    private List<LogHisorique> loghs;
 
 }
