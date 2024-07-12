@@ -24,8 +24,8 @@ public class Vehicule {
     @Enumerated(EnumType.STRING)
     private TypeVehicule type;
     private String couleur;
-    @ManyToMany(mappedBy = "vehicules")
-    private List<Livraison> livraisons = new ArrayList<>();
-    @OneToMany(mappedBy = "vehicule")
-    private List<User> chauffeurs = new ArrayList<>();
+    //@OneToMany(mappedBy = "vehicule", cascade = CascadeType.ALL)
+    //private List<User> chauffeurs = new ArrayList<>();
+
+
 }

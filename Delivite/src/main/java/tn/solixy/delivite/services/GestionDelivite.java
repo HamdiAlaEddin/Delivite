@@ -1,29 +1,34 @@
 package tn.solixy.delivite.services;
 
+import com.cloudinary.utils.ObjectUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
+import tn.solixy.delivite.repositories.IImageRepository;
 import tn.solixy.delivite.repositories.ILivraisonRepository;
-import tn.solixy.delivite.repositories.IRoleRepository;
 import tn.solixy.delivite.repositories.IUserRepository;
 import tn.solixy.delivite.repositories.IVehiculeRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
 public class GestionDelivite implements IGestionDelivite {
 
+
     ILivraisonRepository iLivraisonRepository;
     IUserRepository iUserRepository;
     IVehiculeRepository iVehiculeRepository;
-    IRoleRepository iRoleRepository;
-
-    @Override
+     CloudinaryService cloudinaryService;
+     IImageRepository imageRepository;
+   /* @Override
      public List<Map<String, Object>> getAll() {
             List<User> users = iUserRepository.findAll();
             return users.stream()
@@ -52,7 +57,19 @@ public class GestionDelivite implements IGestionDelivite {
 
             return userMap;
         }
-
+*/
+   @Override
+   public Livraison getLivraisonById(Long idL) {
+       return iLivraisonRepository.findById(idL).get();
+   }
+    @Override
+    public User getUserById(Long idU) {
+        return iUserRepository.findById(idU).get();
+    }
+    @Override
+    public Vehicule getVehiculeById(Long idV) {
+        return iVehiculeRepository.findById(idV).get();
+    }
     @Override
     public List<User> retrieveAllUsers() {
         return iUserRepository.findAll();
@@ -61,28 +78,14 @@ public class GestionDelivite implements IGestionDelivite {
     public List<Livraison> retrieveAllLivraisons() {
         return iLivraisonRepository.findAll();
     }
-
     @Override
     public List<Vehicule> retrieveAllVehicule() {
         return iVehiculeRepository.findAll();
-    }
-
-    @Override
-    public List<User> retrieveAllUsersByRole(Role r) {
-        List<User> filteredUsers = new ArrayList<>();
-        List<User> allUsers = iUserRepository.findAll();
-        for(User user:allUsers){
-            if(user.getRole()==r){
-                filteredUsers.add(user);
-            }
-        }
-        return filteredUsers;
     }
     @Override
     public User updateUser(User u) {
         return iUserRepository.save(u);
     }
-
     @Override
     public Livraison updateLivraison(Livraison l) {
         return iLivraisonRepository.save(l);
@@ -96,7 +99,6 @@ public class GestionDelivite implements IGestionDelivite {
     public void DeleteUser(Long Uid) {
         iUserRepository.deleteById(Uid);
     }
-
     @Override
     public void DeleteLivraison(Long Lid) {
         iLivraisonRepository.deleteById(Lid);
@@ -106,29 +108,74 @@ public class GestionDelivite implements IGestionDelivite {
         iVehiculeRepository.deleteById(Vid);
     }
     @Override
-    public User addUser(User user) {
-        // Assurez-vous que le rôle existe
-        Role role = iRoleRepository.findByRole(user.getRole().getRole());
-        if (role == null) {
-            throw new IllegalArgumentException("Invalid role: " + user.getRole().getRole());
+    public void deleteImageFromCloudinary(String imageUrl) {
+        try {
+            // 5oudh imageID from URL
+            String imageId = extractImageIdFromUrl(imageUrl);
+            // Supprimer image from Cloudinary
+            cloudinaryService.cloudinary.uploader().destroy(imageId, ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        user.setRole(role);
-        return iUserRepository.save(user);
-    }
-
-
-    public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
-        chauffeur.setVehicule(vehicule);
-        return iUserRepository.save(chauffeur);
-    }
-    public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
-        livraison.setChauffeur(chauffeur);
-        return iLivraisonRepository.save(livraison);
     }
     @Override
-    public List<User> findByRole(RoleName roleName) {
-        Role r = iRoleRepository.findByRole(roleName);
-        return iUserRepository.findByRole(r);
+    public  String extractImageIdFromUrl(String imageUrl) {
+        // positionner id mel URl
+        int lastSlashIndex = imageUrl.lastIndexOf("/");
+        int lastDotIndex = imageUrl.lastIndexOf(".");
+        // extract imageID from URL /blablabla
+        return imageUrl.substring(lastSlashIndex + 1, lastDotIndex);
     }
+    @Override
+    public User addUser(User user) {
+        LocalDate currentDate = LocalDate.now();
+        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        user.setRegistrationDate(date);
+        return iUserRepository.save(user);
+    }
+    public ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile) {
 
+                // Enregistrer l'image sur Cloudinary
+        Map uploadResult = null;
+        try {
+            uploadResult = cloudinaryService.upload(imageFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // Récupérer l'URL de l'image depuis Cloudinary
+                String imageUrl = (String) uploadResult.get("url");
+                Image image = new Image();
+                image.setName(imageFile.getOriginalFilename());
+                image.setImageURL(imageUrl);
+                imageRepository.save(image);
+                user.setImage(image);
+                LocalDate currentDate = LocalDate.now();
+                Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                user.setRegistrationDate(date);
+                iUserRepository.save(user);
+                return new ResponseEntity<>("User added successfully", HttpStatus.OK);
+            }
+    @Override
+    public Vehicule addVehicule(Vehicule vehicule) {
+        return iVehiculeRepository.save(vehicule);
+    }
+    @Override
+    public Livraison addLivraison(Livraison livraison){
+        LocalDate currentDate = LocalDate.now();
+        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        livraison.setDateLivraison(date);
+        return  iLivraisonRepository.save(livraison);
+    }
+    public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
+       chauffeur.setVehicule_id(vehicule.getVehiculeID());
+        return iUserRepository.save(chauffeur);
+    }
+    /* public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
+        livraison.setChauffeur(chauffeur);
+        return iLivraisonRepository.save(livraison);
+    }*/
+    @Override
+    public List<User> findByRole(Role role) {
+        return iUserRepository.findByRole(role);
+    }
 }

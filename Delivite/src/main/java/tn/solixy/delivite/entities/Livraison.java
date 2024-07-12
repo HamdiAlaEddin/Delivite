@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -26,21 +28,15 @@ public class Livraison {
     private TypeLivraison type;
     @Enumerated(EnumType.STRING)
     private TypePayement paiement;
-    private LocalDateTime dateCommande;
-    private LocalDateTime dateLivraison;
+    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    private Date dateCommande;
+    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    private Date dateLivraison;
     private String adresseLivraison;
-    private String client;////// clientID corriger !!!
+    private Long id_client;
     private String position;//GPS
     private BigDecimal prix;
     private String description;
-    @ManyToOne
-    @JoinColumn(name = "chauffeur_id")
-    private User chauffeur; // Chauffeur assigné à la livraison
-    @ManyToMany
-    @JoinTable(
-            name = "livraison_vehicule",
-            joinColumns = @JoinColumn(name = "livraison_id"),
-            inverseJoinColumns = @JoinColumn(name = "vehicule_id")
-    )
-    private List<Vehicule> vehicules = new ArrayList<>();
+    private Long id_chauffeur;
+    private Long id_vehicule;
 }
