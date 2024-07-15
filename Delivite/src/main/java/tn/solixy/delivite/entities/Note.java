@@ -11,17 +11,15 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LogHisorique {
+public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long LogID;
-    private String description;
-    @Enumerated(EnumType.STRING)
-    private Incident incident;
+    private Long NoteID;
+    private int valeur;
     @ManyToOne
-    @JoinColumn(name = "livraison_id")
-    private Livraison livr; // Relation avec la livraison
+    @JoinColumn(name = "client_id")
+    private Client client;
     @ManyToOne
-    @JoinColumn(name = "Vehicule_id")
-    private Vehicule vehic;
+    @JoinColumn(name = "chauffeur_id")
+    private Chauffeur chauffeur;
 }

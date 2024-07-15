@@ -14,6 +14,8 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +24,10 @@ public class User {
     private String lastName;
     private String email;
     private String password;
+    @Column(insertable=false, updatable=false)
     @Enumerated(EnumType.STRING)
     private Role role;
+
     private String location;
     @DateTimeFormat(pattern = "YYYY-MM-DD")
     private Date dateOfBirth;
@@ -34,8 +38,4 @@ public class User {
     private Date registrationDate;
     @OneToOne(cascade = CascadeType.ALL)
     private Image image;
-    private int rate; // (chauffeur)
-    private boolean disponible; //(chauffeur)
-    private String numPermisConduit;// (chauffeur)
-    private Long vehicule_id; //(chauffeur)
 }

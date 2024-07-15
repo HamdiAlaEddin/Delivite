@@ -1,6 +1,7 @@
 package tn.solixy.delivite.services;
 
 import com.cloudinary.utils.ObjectUtils;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @Service
+@Transactional
 @AllArgsConstructor
 public class GestionDelivite implements IGestionDelivite {
 
@@ -25,6 +27,7 @@ public class GestionDelivite implements IGestionDelivite {
     ILogHistorique iLogHistorique;
      CloudinaryService cloudinaryService;
      IImageRepository imageRepository;
+     NoteRepository noteRepository;
    /* @Override
      public List<Map<String, Object>> getAll() {
             List<User> users = iUserRepository.findAll();
@@ -102,8 +105,10 @@ public class GestionDelivite implements IGestionDelivite {
     }
     @Override
     public void DeleteVehicule(Long Vid) {
-        iVehiculeRepository.deleteById(Vid);
-    }
+        Vehicule vehicule = iVehiculeRepository.findById(Vid).orElse(null);
+        if (vehicule != null) {
+            for (Chauffeur a : vehicule.getChauffeurs()) {a.setVehicula(null);iUserRepository.save(a);}
+            iVehiculeRepository.deleteById(Vid);}}
     @Override
     public void deleteImageFromCloudinary(String imageUrl) {
         try {
@@ -163,14 +168,14 @@ public class GestionDelivite implements IGestionDelivite {
         livraison.setDateLivraison(date);
         return  iLivraisonRepository.save(livraison);
     }
-    public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
-       chauffeur.setVehicule_id(vehicule.getVehiculeID());
-        return iUserRepository.save(chauffeur);
-    }
-    /* public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
-        livraison.setChauffeur(chauffeur);
-        return iLivraisonRepository.save(livraison);
-    }*/
+    /*  public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
+        chauffeur.setVehicule_id(vehicule.getVehiculeID());
+         return iUserRepository.save(chauffeur);
+     }
+     public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
+         livraison.setChauffeur(chauffeur);
+         return iLivraisonRepository.save(livraison);
+     }*/
     @Override
     public List<User> findByRole(Role role) {
         return iUserRepository.findByRole(role);
@@ -198,5 +203,20 @@ public class GestionDelivite implements IGestionDelivite {
     @Override
     public void DeleteLog(Long ilh) {
       iLogHistorique.deleteById(ilh);
+    }
+    @Override
+    public void donnerNote(Long clientId, Long chauffeurId, int valeur) {
+        Client client = (Client) iUserRepository.findById(clientId).orElse(null);
+        Chauffeur chauffeur = (Chauffeur) iUserRepository.findById(chauffeurId).orElse(null);
+
+        if (client != null && chauffeur != null) {
+            Note note = new Note();
+            note.setClient(client);
+            note.setChauffeur(chauffeur);
+            note.setValeur(valeur);
+
+            chauffeur.addNote(note);
+            iUserRepository.save(chauffeur);
+        }
     }
 }

@@ -37,5 +37,5 @@ public interface IGestionDelivite {
     public List<User> findByRole(Role role);
     void deleteImageFromCloudinary(String imageUrl);
     String extractImageIdFromUrl(String imageUrl);
-
+    public void donnerNote(Long clientId, Long chauffeurId, int valeur);
 }
