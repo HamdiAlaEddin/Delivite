@@ -9,7 +9,6 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-
 @DiscriminatorValue("Resto")
 public class Resto extends User{
 

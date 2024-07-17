@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.IGestionDelivite;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -79,5 +80,12 @@ public class DeliviteController {
     @DeleteMapping("/deleteLogHistorique/{id}")
     public void deleteLog(@PathVariable("id") Long LogID){
         service.DeleteLog(LogID);
+    }
+    @GetMapping("/calculPrixDelivry")
+    public BigDecimal calculateDeliveryPrice(@RequestParam Long userId, @RequestParam BigDecimal baseDeliveryPrice) {
+        User user = service.getUserById(userId);
+        BigDecimal finalPrice = service.applyDiscounts((Client) user, baseDeliveryPrice);
+        service.updateUser(user);
+        return finalPrice;
     }
 }

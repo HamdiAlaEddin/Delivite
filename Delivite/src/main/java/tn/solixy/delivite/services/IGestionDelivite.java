@@ -4,8 +4,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface IGestionDelivite {
     User addUser(User user);
@@ -17,7 +19,6 @@ public interface IGestionDelivite {
     LogHisorique GetLogbyId(Long ilh);
     LogHisorique UpdateLog(LogHisorique lh);
     void DeleteLog(Long ilh);
-
     Livraison getLivraisonById(Long idL);
     User getUserById(Long idU);
     Vehicule getVehiculeById(Long idV);
@@ -30,12 +31,12 @@ public interface IGestionDelivite {
     void DeleteUser(Long Uid);
     void DeleteLivraison(Long Lid);
     void DeleteVehicule(Long Vid);
-  /*  public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur);
-    public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule);
-  public List<Map<String, Object>> getAll() ;
-     Map<String, Object> convertToMap(User us);*/
     public List<User> findByRole(Role role);
     void deleteImageFromCloudinary(String imageUrl);
     String extractImageIdFromUrl(String imageUrl);
-    public void donnerNote(Long clientId, Long chauffeurId, int valeur);
+    public void donnerNote(Long clientId, Long chauffeurId, Rating valeur);
+    /* public Optional<Chauffeur> choisirChauffeur(String location);
+   public List<Vehicule> findAvailableVehicles();
+    public Optional<Livraison> affecterLivraison(Long livraisonId);*/
+    public BigDecimal applyDiscounts(Client user, BigDecimal deliveryPrice);
 }

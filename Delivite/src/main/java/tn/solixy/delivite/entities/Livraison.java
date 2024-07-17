@@ -35,7 +35,9 @@ public class Livraison {
     private String position;//GPS
     private BigDecimal prix;
     private String description;
-    private Long id_chauffeur;
+    @ManyToOne
+    @JoinColumn(name = "id_chauffeur")
+    private Chauffeur chauf;
     private Long id_vehicule;
     @OneToMany(mappedBy = "livr")
     private List<LogHisorique> loghs;

@@ -15,7 +15,8 @@ public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long NoteID;
-    private int valeur;
+    @Enumerated(EnumType.STRING)
+    private Rating rate;
     @ManyToOne
     @JoinColumn(name = "client_id")
     private Client client;

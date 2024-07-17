@@ -29,8 +29,6 @@ public class Chauffeur extends User{
         super();
         this.setRole(Role.Chauffeur);
     }
-    @ManyToOne
-    @JoinColumn(name = "VehiculeID")
-    private Vehicule vehicula;
-
+    @OneToMany(mappedBy = "chauf", cascade = CascadeType.ALL)
+    private List<Livraison> livraisons = new ArrayList<>();
 }

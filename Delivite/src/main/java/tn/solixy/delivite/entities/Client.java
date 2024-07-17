@@ -6,11 +6,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @DiscriminatorValue("Client")
 public class Client  extends User{
+    private int deliveriesCount;
+    private Date lastQuarterlyDiscountDate; // Date de la dernière réduction trimestrielle
+    public Client() {
 
+    }
 }

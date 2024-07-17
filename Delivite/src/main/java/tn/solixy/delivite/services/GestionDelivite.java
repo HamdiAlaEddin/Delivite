@@ -1,5 +1,4 @@
 package tn.solixy.delivite.services;
-
 import com.cloudinary.utils.ObjectUtils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -9,17 +8,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.repositories.*;
-
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-
 @Service
 @Transactional
 @AllArgsConstructor
 public class GestionDelivite implements IGestionDelivite {
-
 
     ILivraisonRepository iLivraisonRepository;
     IUserRepository iUserRepository;
@@ -28,36 +25,7 @@ public class GestionDelivite implements IGestionDelivite {
      CloudinaryService cloudinaryService;
      IImageRepository imageRepository;
      NoteRepository noteRepository;
-   /* @Override
-     public List<Map<String, Object>> getAll() {
-            List<User> users = iUserRepository.findAll();
-            return users.stream()
-                    .map(this::convertToMap)
-                    .collect(Collectors.toList());
-        }
-    @Override
-        public Map<String, Object> convertToMap(User us) {
-            Map<String, Object> userMap = new HashMap<>();
-            userMap.put("userId", us.getUserID());
-            userMap.put("email", us.getEmail());
-            userMap.put("firstName", us.getFirstName());
-            userMap.put("lastName", us.getLastName());
-            userMap.put("role", us.getRole());
 
-
-            if (us.getRole().getRole() == RoleName.Chauffeur) {
-                userMap.put("drivingLicenseNumber", us.getNumPermisConduit());
-                userMap.put("rate", us.getRate());
-                userMap.put("vehicle", us.getVehicule());
-            } else {
-                userMap.put("drivingLicenseNumber", "");
-                userMap.put("rate", 0);
-                userMap.put("vehicle", null);
-            }
-
-            return userMap;
-        }
-*/
    @Override
    public Livraison getLivraisonById(Long idL) {
        return iLivraisonRepository.findById(idL).get();
@@ -90,7 +58,6 @@ public class GestionDelivite implements IGestionDelivite {
     public Livraison updateLivraison(Livraison l) {
         return iLivraisonRepository.save(l);
     }
-
     @Override
     public Vehicule updateVehicule(Vehicule v) {
         return iVehiculeRepository.save(v);
@@ -105,16 +72,11 @@ public class GestionDelivite implements IGestionDelivite {
     }
     @Override
     public void DeleteVehicule(Long Vid) {
-        Vehicule vehicule = iVehiculeRepository.findById(Vid).orElse(null);
-        if (vehicule != null) {
-            for (Chauffeur a : vehicule.getChauffeurs()) {a.setVehicula(null);iUserRepository.save(a);}
-            iVehiculeRepository.deleteById(Vid);}}
+            iVehiculeRepository.deleteById(Vid);}
     @Override
     public void deleteImageFromCloudinary(String imageUrl) {
         try {
-            // 5oudh imageID from URL
             String imageId = extractImageIdFromUrl(imageUrl);
-            // Supprimer image from Cloudinary
             cloudinaryService.cloudinary.uploader().destroy(imageId, ObjectUtils.emptyMap());
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,7 +87,7 @@ public class GestionDelivite implements IGestionDelivite {
         // positionner id mel URl
         int lastSlashIndex = imageUrl.lastIndexOf("/");
         int lastDotIndex = imageUrl.lastIndexOf(".");
-        // extract imageID from URL /blablabla
+        // extract imageID from URL
         return imageUrl.substring(lastSlashIndex + 1, lastDotIndex);
     }
     @Override
@@ -136,7 +98,6 @@ public class GestionDelivite implements IGestionDelivite {
         return iUserRepository.save(user);
     }
     public ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile) {
-
                 // Enregistrer l'image sur Cloudinary
         Map uploadResult = null;
         try {
@@ -168,14 +129,6 @@ public class GestionDelivite implements IGestionDelivite {
         livraison.setDateLivraison(date);
         return  iLivraisonRepository.save(livraison);
     }
-    /*  public User addChauffeurAndAssignToVehicule(User chauffeur, Vehicule vehicule) {
-        chauffeur.setVehicule_id(vehicule.getVehiculeID());
-         return iUserRepository.save(chauffeur);
-     }
-     public Livraison addLivraisonAndAssignToLivreur(Livraison livraison, User chauffeur) {
-         livraison.setChauffeur(chauffeur);
-         return iLivraisonRepository.save(livraison);
-     }*/
     @Override
     public List<User> findByRole(Role role) {
         return iUserRepository.findByRole(role);
@@ -184,39 +137,102 @@ public class GestionDelivite implements IGestionDelivite {
     public LogHisorique addLog(LogHisorique lh) {
         return iLogHistorique.save(lh);
     }
-
     @Override
     public List<LogHisorique> GetAllLog() {
         return iLogHistorique.findAll();
     }
-
     @Override
     public LogHisorique GetLogbyId(Long ilh) {
         return iLogHistorique.findById(ilh).get();
     }
-
     @Override
     public LogHisorique UpdateLog(LogHisorique lh) {
         return iLogHistorique.save(lh);
     }
-
     @Override
     public void DeleteLog(Long ilh) {
       iLogHistorique.deleteById(ilh);
     }
     @Override
-    public void donnerNote(Long clientId, Long chauffeurId, int valeur) {
-        Client client = (Client) iUserRepository.findById(clientId).orElse(null);
-        Chauffeur chauffeur = (Chauffeur) iUserRepository.findById(chauffeurId).orElse(null);
+    public void donnerNote(Long clientId, Long chauffeurId, Rating rating) {
+        Client client = iUserRepository.findById(clientId)
+                .filter(User -> User instanceof Client)
+                .map(Client.class::cast)
+                .orElse(null);
+
+        Chauffeur chauffeur = iUserRepository.findById(chauffeurId)
+                .filter(User -> User instanceof Chauffeur)
+                .map(Chauffeur.class::cast)
+                .orElse(null);
 
         if (client != null && chauffeur != null) {
             Note note = new Note();
             note.setClient(client);
             note.setChauffeur(chauffeur);
-            note.setValeur(valeur);
+            note.setRate(rating);
 
             chauffeur.addNote(note);
             iUserRepository.save(chauffeur);
         }
     }
+   /*   @Override
+    public Optional<Chauffeur> choisirChauffeur(String location) {
+        List<Chauffeur> chauffeurs = iUserRepository.findByDisponibleTrueAndAcceptedTrueOrderByNoteDesc();
+        if (!chauffeurs.isEmpty()) {
+            return Optional.of(chauffeurs.get(0));
+        }
+        return Optional.empty();
+    }
+  @Override
+    public List<Vehicule> findAvailableVehicles() {
+        List<Vehicule> vehiclesNotAssignedToActiveDelivery = iVehiculeRepository.findAll();
+        return vehiclesNotAssignedToActiveDelivery.stream()
+                .filter(vehicule -> vehicule.getChauffeurs().stream()
+                        .anyMatch(chauffeur -> chauffeur.isDisponible() && chauffeur.isAccepted()))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public Optional<Livraison> affecterLivraison(Long livraisonId) {
+        Optional<Livraison> livraisonOpt = iLivraisonRepository.findById(livraisonId);
+        if (livraisonOpt.isPresent()) {
+            Livraison livraison = livraisonOpt.get();
+            List<Vehicule> vehiculesDisponibles = findAvailableVehicles();
+            if (!vehiculesDisponibles.isEmpty()) {
+                Vehicule vehicule = vehiculesDisponibles.get(0);
+                Chauffeur chauffeur = vehicule.getChauffeurs().stream()
+                        .filter(c -> c.isDisponible() && c.isAccepted())
+                        .findFirst()
+                        .orElse(null);
+                if (chauffeur != null) {
+                    livraison.setId_vehicule(vehicule.getVehiculeID());
+                    livraison.setId_chauffeur(chauffeur.getUserID());
+                    iLivraisonRepository.save(livraison);
+                    return Optional.of(livraison);
+                }
+            }
+        }
+        return Optional.empty();
+   }*/
+    @Override
+   public BigDecimal applyDiscounts(Client user, BigDecimal deliveryPrice) {
+       LocalDate today = LocalDate.now();
+       LocalDate birthday = user.getDateOfBirth().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+       // Réduction d'anniversaire
+       if (today.getMonth() == birthday.getMonth() && today.getDayOfMonth() == birthday.getDayOfMonth()) {
+           deliveryPrice = deliveryPrice.multiply(BigDecimal.valueOf(0.8)); // Réduction de 20%
+       }
+       // Réduction tous les 3 mois
+       LocalDate lastDiscountDate = user.getLastQuarterlyDiscountDate() != null ?
+               user.getLastQuarterlyDiscountDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+       if (lastDiscountDate == null || today.isAfter(lastDiscountDate.plusMonths(3))) {
+           deliveryPrice = deliveryPrice.multiply(BigDecimal.valueOf(0.98)); // Réduction de 2%
+           user.setLastQuarterlyDiscountDate(Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+       }
+       // Réduction après chaque 25 livraisons
+       if (user.getDeliveriesCount() > 0 && user.getDeliveriesCount() % 25 == 0) {
+           deliveryPrice = deliveryPrice.multiply(BigDecimal.valueOf(0.98)); // Réduction de 2%
+       }
+       return deliveryPrice;
+   }
 }
+

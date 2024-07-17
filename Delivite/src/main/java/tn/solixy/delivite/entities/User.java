@@ -27,7 +27,6 @@ public class User {
     @Column(insertable=false, updatable=false)
     @Enumerated(EnumType.STRING)
     private Role role;
-
     private String location;
     @DateTimeFormat(pattern = "YYYY-MM-DD")
     private Date dateOfBirth;
