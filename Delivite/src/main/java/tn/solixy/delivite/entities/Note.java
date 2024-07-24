@@ -19,8 +19,8 @@ public class Note {
     private Rating rate;
     @ManyToOne
     @JoinColumn(name = "client_id")
-    private Client client;
+    public  Client client;
     @ManyToOne
     @JoinColumn(name = "chauffeur_id")
-    private Chauffeur chauffeur;
+    public Chauffeur chauffeur;
 }

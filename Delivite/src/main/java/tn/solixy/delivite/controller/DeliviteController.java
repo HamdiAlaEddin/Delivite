@@ -5,22 +5,48 @@ import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.IGestionDelivite;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/Delivite")
-//@CrossOrigin("*")
+@CrossOrigin("*")
 public class DeliviteController {
     IGestionDelivite service;
     @GetMapping("/role/{roleName}")
     public List<User> getUsersByRole(@PathVariable Role roleName) {
         return service.findByRole(roleName);
     }
-    @PostMapping("/addUser/{Role}")
-    public User addUser(@PathVariable("Role") Role Role,@RequestBody User user) {
-        return service.addUser(user);
+    @GetMapping("/getClients")
+    public List<User> getClients() {
+        return service.getAllClients(Role.CLIENT);
     }
+    @GetMapping("/getChauffeurs")
+    public List<User> getChauffeurs() {
+        return service.getAllChauffeurs(Role.CHAUFFEUR);
+    }
+    @GetMapping("/getRestaurants")
+    public List<User> getRestaurants() {
+        return service.getAllRestaurants(Role.RESTO);
+    }
+    @PostMapping("/addUser/{role}")
+    public User addUser(@PathVariable("role") Role role, @RequestBody User user) {
+
+
+
+        // Définir la date d'inscription
+        LocalDate currentDate = LocalDate.now();
+        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        user.setRegistrationDate(date);
+
+        // Enregistrer l'utilisateur
+        return service.addUser(String.valueOf(role),user);
+    }
+
+
     @PostMapping("/addVehicule")
     public Vehicule addVehicule(@RequestBody Vehicule vehicule) {
         return service.addVehicule(vehicule);
@@ -49,7 +75,6 @@ public class DeliviteController {
     public List<LogHisorique> getAllLogs(){
         return service.GetAllLog();
     }
-    @PutMapping("/updateUsers")
     public User updateUsers(@RequestBody User user){
         return  service.updateUser(user);
     }
@@ -57,6 +82,11 @@ public class DeliviteController {
     public Livraison updateLivraison(@RequestBody Livraison livraison){
         return  service.updateLivraison(livraison);
     }
+    @PutMapping("/updateUser")
+    public User updateUser(@RequestBody User user){
+        return  service.updateUser(user);
+    }
+
     @PutMapping("/updateVehicule")
     public Vehicule updateVehicule(@RequestBody Vehicule vehicule){
         return  service.updateVehicule(vehicule);
@@ -87,5 +117,9 @@ public class DeliviteController {
         BigDecimal finalPrice = service.applyDiscounts((Client) user, baseDeliveryPrice);
         service.updateUser(user);
         return finalPrice;
+    }
+    @PostMapping("/accept-chauffeur/{id}")
+    public Chauffeur acceptChauffeur(@PathVariable Long id) {
+        return service.acceptChauffeur(id);
     }
 }

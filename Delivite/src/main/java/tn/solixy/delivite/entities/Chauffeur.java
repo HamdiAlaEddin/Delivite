@@ -13,11 +13,13 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@DiscriminatorValue("Chauffeur")
+@DiscriminatorValue("CHAUFFEUR")
 public class Chauffeur extends User{
-
+    @Column(name = "disponible", nullable = true)
     private boolean disponible;
+    @Column(name = "accepted", nullable = true)
     private boolean accepted;
+    @Column(name = "num_permis_conduit", nullable = true)
     private String numPermisConduit;
     @OneToMany(mappedBy = "chauffeur", cascade = CascadeType.ALL)
     private List<Note> notes = new ArrayList<>();
@@ -27,8 +29,16 @@ public class Chauffeur extends User{
     }
     public Chauffeur() {
         super();
-        this.setRole(Role.Chauffeur);
+        this.setRole(Role.CHAUFFEUR);
+        this.accepted = false;
     }
     @OneToMany(mappedBy = "chauf", cascade = CascadeType.ALL)
     private List<Livraison> livraisons = new ArrayList<>();
+    public boolean isAccepted() {
+        return accepted;
+    }
+    public void setAccepted(boolean accepted) {
+        this.accepted = accepted;
+    }
+
 }

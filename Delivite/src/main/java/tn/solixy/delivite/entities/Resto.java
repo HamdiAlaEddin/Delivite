@@ -9,11 +9,11 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@DiscriminatorValue("Resto")
+@DiscriminatorValue("RESTO")
 public class Resto extends User{
 
     public Resto() {
         super();
-        this.setRole(Role.Resto);
+        this.setRole(Role.RESTO);
     }
 }

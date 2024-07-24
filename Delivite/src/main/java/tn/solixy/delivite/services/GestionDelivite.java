@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 @AllArgsConstructor
@@ -91,10 +93,24 @@ public class GestionDelivite implements IGestionDelivite {
         return imageUrl.substring(lastSlashIndex + 1, lastDotIndex);
     }
     @Override
-    public User addUser(User user) {
-        LocalDate currentDate = LocalDate.now();
-        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        user.setRegistrationDate(date);
+    public User addUser(String userType,User user) {
+
+            switch (userType.toUpperCase()) {
+                case "CLIENT":
+                    user = new Client();
+                    break;
+                case "CHAUFFEUR":
+                    user = new Chauffeur();
+                    break;
+                case "RESTO":
+                    user = new Resto();
+                    break;
+                case "ADMIN":
+                    user = new Admin();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid user type: " + userType);
+            }
         return iUserRepository.save(user);
     }
     public ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile) {
@@ -234,5 +250,28 @@ public class GestionDelivite implements IGestionDelivite {
        }
        return deliveryPrice;
    }
+   @Override
+    public List<User> getAllClients(Role Client) {
+       List<User> allClients=iUserRepository.findByRole(Client);
+        return allClients;
+    }
+    @Override
+    public List<User> getAllRestaurants(Role Resto) {
+        List<User> allRestaurants=iUserRepository.findByRole(Resto);
+        return allRestaurants;
+    }
+    @Override
+    public List<User> getAllChauffeurs(Role Chauffeur) {
+        List<User> allChauffeurs=iUserRepository.findByRole(Chauffeur);
+        return allChauffeurs;
+    }
+
+    @Override
+    public Chauffeur acceptChauffeur(Long id) {
+        Chauffeur chauffeur = (Chauffeur) iUserRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Chauffeur not found"));
+        chauffeur.setAccepted(true);
+        return iUserRepository.save(chauffeur);
+    }
 }
 

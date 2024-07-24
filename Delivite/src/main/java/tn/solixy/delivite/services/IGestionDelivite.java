@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface IGestionDelivite {
-    User addUser(User user);
+    User addUser(String userType,User user);
     ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile);
     public Vehicule addVehicule(Vehicule vehicule);
     public Livraison addLivraison(Livraison livraison);
@@ -39,4 +39,8 @@ public interface IGestionDelivite {
    public List<Vehicule> findAvailableVehicles();
     public Optional<Livraison> affecterLivraison(Long livraisonId);*/
     public BigDecimal applyDiscounts(Client user, BigDecimal deliveryPrice);
+    public List<User> getAllClients(Role Client);
+    public List<User> getAllRestaurants(Role Resto);
+    public List<User> getAllChauffeurs(Role Chauffeur);
+    public Chauffeur acceptChauffeur(Long id);
 }

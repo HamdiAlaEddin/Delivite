@@ -16,24 +16,24 @@ import java.util.Date;
 @NoArgsConstructor
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
-public class User {
+public  class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long UserID;
+    private Long userID;
     private String firstName;
     private String lastName;
     private String email;
     private String password;
-    @Column(insertable=false, updatable=false)
+    @Column(name = "role", insertable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
     private String location;
-    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dateOfBirth;
     private String phoneNumber;
     private String address;
     private String preferredLanguage;
-    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date registrationDate;
     @OneToOne(cascade = CascadeType.ALL)
     private Image image;
