@@ -1,5 +1,6 @@
 package tn.solixy.delivite.controller;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,8 @@ import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.IGestionDelivite;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -50,6 +53,7 @@ public class DeliviteController {
 //        // Enregistrer l'utilisateur
 //        return service.addUser(String.valueOf(role),user);
 //    }
+@SneakyThrows
 @PostMapping("/addUser")
 public ResponseEntity<String> addUserWithImage(
         @RequestParam(value = "firstName", required = true) String firstName,
@@ -60,9 +64,14 @@ public ResponseEntity<String> addUserWithImage(
         @RequestParam(value = "location", required = true) String location,
         @RequestParam(value = "image", required = true) MultipartFile imageFile,
         @RequestParam(value = "address", required = true) String address,
-        @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_of_birth,
+        @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String dateOfBirthStr,
         @RequestParam(value = "phone_number", required = true) String phone_number) {
-    try {
+
+
+
+
+        try {
+            Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
         // Log des paramètres reçus
         System.out.println("firstName: " + firstName);
         System.out.println("lastName: " + lastname);
@@ -71,7 +80,7 @@ public ResponseEntity<String> addUserWithImage(
         System.out.println("preferredLanguage: " + preferredLanguage);
         System.out.println("location: " + location);
         System.out.println("address: " + address);
-        System.out.println("date_of_birth: " + date_of_birth);
+        System.out.println("date_of_birth: " + dateOfBirth);
         System.out.println("phone_number: " + phone_number);
         System.out.println("imageFile: " + (imageFile != null ? imageFile.getOriginalFilename() : "null"));
 
@@ -84,13 +93,13 @@ public ResponseEntity<String> addUserWithImage(
                 location == null || location.isEmpty() ||
                 imageFile == null || imageFile.isEmpty() ||
                 address == null || address.isEmpty() ||
-                date_of_birth == null ||
+                dateOfBirth == null ||
                 phone_number == null || phone_number.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tous les paramètres sont obligatoires.");
         }
 
         // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
-        service.addUserWithImage("CLIENT", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, date_of_birth, phone_number);
+        service.addUserWithImage("CLIENT", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
         return ResponseEntity.status(HttpStatus.CREATED).body("Utilisateur ajouté avec succès !");
     } catch (Exception e) {
         e.printStackTrace(); // ou tout autre traitement d'erreur approprié
