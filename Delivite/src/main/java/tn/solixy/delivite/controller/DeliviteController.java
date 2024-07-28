@@ -1,6 +1,10 @@
 package tn.solixy.delivite.controller;
 import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.IGestionDelivite;
 
@@ -20,6 +24,10 @@ public class DeliviteController {
     public List<User> getUsersByRole(@PathVariable Role roleName) {
         return service.findByRole(roleName);
     }
+    @GetMapping("/getClient/{id}")
+    public User getClient(@PathVariable("id") Long id) {
+        return service.getUserById(id);
+    }
     @GetMapping("/getClients")
     public List<User> getClients() {
         return service.getAllClients(Role.CLIENT);
@@ -32,19 +40,63 @@ public class DeliviteController {
     public List<User> getRestaurants() {
         return service.getAllRestaurants(Role.RESTO);
     }
-    @PostMapping("/addUser/{role}")
-    public User addUser(@PathVariable("role") Role role, @RequestBody User user) {
+//    @PostMapping("/addUser/{role}")
+//    public User addUser(@PathVariable("role") Role role, @RequestBody User user) {
+//        // Définir la date d'inscription
+//        LocalDate currentDate = LocalDate.now();
+//        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//        user.setRegistrationDate(date);
+//
+//        // Enregistrer l'utilisateur
+//        return service.addUser(String.valueOf(role),user);
+//    }
+@PostMapping("/addUser")
+public ResponseEntity<String> addUserWithImage(
+        @RequestParam(value = "firstName", required = true) String firstName,
+        @RequestParam(value = "lastName", required = true) String lastname,
+        @RequestParam(value = "password", required = true) String password,
+        @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
+        @RequestParam(value = "email", required = true) String email,
+        @RequestParam(value = "location", required = true) String location,
+        @RequestParam(value = "image", required = true) MultipartFile imageFile,
+        @RequestParam(value = "address", required = true) String address,
+        @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date_of_birth,
+        @RequestParam(value = "phone_number", required = true) String phone_number) {
+    try {
+        // Log des paramètres reçus
+        System.out.println("firstName: " + firstName);
+        System.out.println("lastName: " + lastname);
+        System.out.println("password: " + password);
+        System.out.println("email: " + email);
+        System.out.println("preferredLanguage: " + preferredLanguage);
+        System.out.println("location: " + location);
+        System.out.println("address: " + address);
+        System.out.println("date_of_birth: " + date_of_birth);
+        System.out.println("phone_number: " + phone_number);
+        System.out.println("imageFile: " + (imageFile != null ? imageFile.getOriginalFilename() : "null"));
 
+        // Vérifiez que tous les paramètres obligatoires sont présents
+        if (firstName == null || firstName.isEmpty() ||
+                lastname == null || lastname.isEmpty() ||
+                password == null || password.isEmpty() ||
+                preferredLanguage == null || preferredLanguage.isEmpty() ||
+                email == null || email.isEmpty() ||
+                location == null || location.isEmpty() ||
+                imageFile == null || imageFile.isEmpty() ||
+                address == null || address.isEmpty() ||
+                date_of_birth == null ||
+                phone_number == null || phone_number.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tous les paramètres sont obligatoires.");
+        }
 
-
-        // Définir la date d'inscription
-        LocalDate currentDate = LocalDate.now();
-        Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        user.setRegistrationDate(date);
-
-        // Enregistrer l'utilisateur
-        return service.addUser(String.valueOf(role),user);
+        // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
+        service.addUserWithImage("CLIENT", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, date_of_birth, phone_number);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Utilisateur ajouté avec succès !");
+    } catch (Exception e) {
+        e.printStackTrace(); // ou tout autre traitement d'erreur approprié
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout de l'utilisateur.");
     }
+}
 
 
     @PostMapping("/addVehicule")

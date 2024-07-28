@@ -35,6 +35,7 @@ public  class User {
     private String preferredLanguage;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date registrationDate;
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "image_id")
     private Image image;
 }

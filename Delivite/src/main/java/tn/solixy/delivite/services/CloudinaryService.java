@@ -35,6 +35,7 @@ public class CloudinaryService {
         Map params = ObjectUtils.asMap(
                 "resource_type", "auto" // Vous pouvez spécifier "auto" pour détecter automatiquement le type de ressource
         );
+        System.out.println("Upload du fichier: " + file.getCanonicalFile());
         Map result = cloudinary.uploader().upload(file, params);
 
         if (!Files.deleteIfExists(file.toPath())) {

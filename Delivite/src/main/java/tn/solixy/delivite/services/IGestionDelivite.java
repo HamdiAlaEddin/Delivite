@@ -5,13 +5,14 @@ import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public interface IGestionDelivite {
     User addUser(String userType,User user);
-    ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile);
+    //ResponseEntity<String> addUserWithImage(String userType,User user, MultipartFile imageFile);
     public Vehicule addVehicule(Vehicule vehicule);
     public Livraison addLivraison(Livraison livraison);
      LogHisorique addLog(LogHisorique lh);
@@ -43,4 +44,6 @@ public interface IGestionDelivite {
     public List<User> getAllRestaurants(Role Resto);
     public List<User> getAllChauffeurs(Role Chauffeur);
     public Chauffeur acceptChauffeur(Long id);
-}
+    public ResponseEntity<String> addUserWithImage(String userType, String firstName, String lastName, String password, String email,
+                                                   String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number) ;
+    }

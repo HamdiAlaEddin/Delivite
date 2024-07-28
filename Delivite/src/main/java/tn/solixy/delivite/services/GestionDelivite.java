@@ -66,7 +66,16 @@ public class GestionDelivite implements IGestionDelivite {
     }
     @Override
     public void DeleteUser(Long Uid) {
-        iUserRepository.deleteById(Uid);
+
+        Optional<User> USOptional = iUserRepository.findById(Uid);
+        if (USOptional.isPresent()) {
+            User user = USOptional.get();
+            String imageURL = user.getImage().getImageURL();
+            Long imageId = user.getImage().getId();
+            deleteImageFromCloudinary(imageURL);
+            iUserRepository.deleteById(Uid);
+        }
+
     }
     @Override
     public void DeleteLivraison(Long Lid) {
@@ -78,7 +87,9 @@ public class GestionDelivite implements IGestionDelivite {
     @Override
     public void deleteImageFromCloudinary(String imageUrl) {
         try {
+            // 5oudh imageID from URL
             String imageId = extractImageIdFromUrl(imageUrl);
+            // Supprimer image from Cloudinary
             cloudinaryService.cloudinary.uploader().destroy(imageId, ObjectUtils.emptyMap());
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,27 +124,101 @@ public class GestionDelivite implements IGestionDelivite {
             }
         return iUserRepository.save(user);
     }
-    public ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile) {
-                // Enregistrer l'image sur Cloudinary
-        Map uploadResult = null;
-        try {
-            uploadResult = cloudinaryService.upload(imageFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        // Récupérer l'URL de l'image depuis Cloudinary
-                String imageUrl = (String) uploadResult.get("url");
-                Image image = new Image();
-                image.setName(imageFile.getOriginalFilename());
-                image.setImageURL(imageUrl);
-                imageRepository.save(image);
-                user.setImage(image);
-                LocalDate currentDate = LocalDate.now();
-                Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                user.setRegistrationDate(date);
-                iUserRepository.save(user);
-                return new ResponseEntity<>("User added successfully", HttpStatus.OK);
-            }
+//    @Transactional
+//    public ResponseEntity<String> addUserWithImage(User user, MultipartFile imageFile) {
+//                // Enregistrer l'image sur Cloudinary
+//        Map uploadResult = null;
+//        try {
+//            uploadResult = cloudinaryService.upload(imageFile);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        // Récupérer l'URL de l'image depuis Cloudinary
+//                String imageUrl = (String) uploadResult.get("url");
+//                Image image = new Image();
+//                image.setName(imageFile.getOriginalFilename());
+//                image.setImageURL(imageUrl);
+//                imageRepository.save(image);
+//                user.setImage(image);
+//                user.setRole(Role.CLIENT);
+//                LocalDate currentDate = LocalDate.now();
+//                Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//                user.setRegistrationDate(date);
+//                iUserRepository.save(user);
+//                return new ResponseEntity<>("User added successfully", HttpStatus.OK);
+//            }
+@Transactional
+public ResponseEntity<String> addUserWithImage(String userType, String firstName, String lastName, String password, String email,
+                                               String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number) {
+
+    User user;
+
+    // Gérer le type d'utilisateur
+    switch (userType.toUpperCase()) {
+        case "CLIENT":
+            user = new Client();
+            user.setRole(Role.CLIENT);
+            break;
+        case "CHAUFFEUR":
+            user = new Chauffeur();
+            user.setRole(Role.CHAUFFEUR);
+            break;
+        case "RESTO":
+            user = new Resto();
+            user.setRole(Role.RESTO);
+            break;
+        case "ADMIN":
+            user = new Admin();
+            user.setRole(Role.ADMIN);
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid user type: " + userType);
+    }
+
+    // Remplir les données communes
+    user.setFirstName(firstName);
+    user.setLastName(lastName);
+    user.setPassword(password);
+    user.setEmail(email);
+    user.setPreferredLanguage(preferredLanguage);
+    user.setLocation(location);
+    user.setAddress(address);
+    user.setDateOfBirth(date_of_birth);
+    user.setPhoneNumber(phone_number);
+
+    // Enregistrer l'image sur Cloudinary
+    Map<String, Object> uploadResult;
+    try {
+        uploadResult = cloudinaryService.upload(imageFile);
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+
+    // Récupérer l'URL de l'image depuis Cloudinary
+    String imageUrl = (String) uploadResult.get("url");
+    if (imageUrl == null || imageUrl.isEmpty()) {
+        throw new IllegalArgumentException("L'URL de l'image est nulle ou vide.");
+    }
+    Image image = new Image();
+    image.setName(imageFile.getOriginalFilename());
+    image.setImageURL(imageUrl);
+    imageRepository.save(image);
+
+    // Associer l'image à l'utilisateur
+    user.setImage(image);
+
+    // Enregistrer la date d'inscription
+    LocalDate currentDate = LocalDate.now();
+    Date registrationDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    user.setRegistrationDate(registrationDate);
+
+    // Enregistrer l'utilisateur dans le dépôt
+    iUserRepository.save(user);
+
+    return new ResponseEntity<>("Utilisateur ajouté avec succès", HttpStatus.CREATED);
+}
+
+
     @Override
     public Vehicule addVehicule(Vehicule vehicule) {
         return iVehiculeRepository.save(vehicule);
