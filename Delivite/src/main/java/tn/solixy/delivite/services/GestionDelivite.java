@@ -1,5 +1,6 @@
 package tn.solixy.delivite.services;
 import com.cloudinary.utils.ObjectUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -52,10 +53,51 @@ public class GestionDelivite implements IGestionDelivite {
     public List<Vehicule> retrieveAllVehicule() {
         return iVehiculeRepository.findAll();
     }
-    @Override
-    public User updateUser(User u) {
-        return iUserRepository.save(u);
+@Override
+public Client updateClient(Client client) {
+
+        Long clientId = client.getUserID();
+
+        Optional<User> existingUserOptional = iUserRepository.findById(clientId);
+
+        if (existingUserOptional.isPresent() && existingUserOptional.get() instanceof Client) {
+            Client existingClient = (Client) existingUserOptional.get();
+
+            // Mettre à jour uniquement les champs modifiables
+            if (client.getFirstName() != null) {
+                existingClient.setFirstName(client.getFirstName());
+            }
+            if (client.getLastName() != null) {
+                existingClient.setLastName(client.getLastName());
+            }
+            if (client.getPassword() != null) {
+                existingClient.setPassword(client.getPassword());
+            }
+            if (client.getEmail() != null) {
+                existingClient.setEmail(client.getEmail());
+            }
+            if (client.getAddress() != null) {
+                existingClient.setAddress(client.getAddress());
+            }
+            if (client.getPhoneNumber() != null) {
+                existingClient.setPhoneNumber(client.getPhoneNumber());
+            }
+            if (client.getImage() != null) {
+                existingClient.setImage(client.getImage());
+            }
+            if (client.getPreferredLanguage() != null) {
+                existingClient.setPreferredLanguage(client.getPreferredLanguage());
+            }
+            if (client.getDateOfBirth() != null) {
+                existingClient.setDateOfBirth(client.getDateOfBirth());
+            }
+
+            return iUserRepository.save(existingClient);
+        } else {
+            throw new EntityNotFoundException("Client not found with id: " + clientId);
+        }
     }
+
     @Override
     public Livraison updateLivraison(Livraison l) {
         return iLivraisonRepository.save(l);

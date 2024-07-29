@@ -26,7 +26,8 @@ public interface IGestionDelivite {
     List<User> retrieveAllUsers();
     List<Livraison> retrieveAllLivraisons();
     List<Vehicule> retrieveAllVehicule();
-    User updateUser(User u);
+    //public void updateUser(User user);
+    public Client updateClient(Client user) ;
     Livraison updateLivraison(Livraison l);
     Vehicule updateVehicule(Vehicule v);
     void DeleteUser(Long Uid);

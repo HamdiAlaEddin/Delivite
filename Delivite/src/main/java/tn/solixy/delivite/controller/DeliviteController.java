@@ -1,4 +1,5 @@
 package tn.solixy.delivite.controller;
+
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -7,15 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
+import tn.solixy.delivite.repositories.IImageRepository;
+import tn.solixy.delivite.repositories.IUserRepository;
+import tn.solixy.delivite.services.CloudinaryService;
 import tn.solixy.delivite.services.IGestionDelivite;
-
-import java.math.BigDecimal;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
+
 import java.util.Date;
 import java.util.List;
+
 
 @RestController
 @AllArgsConstructor
@@ -23,6 +24,8 @@ import java.util.List;
 @CrossOrigin("*")
 public class DeliviteController {
     IGestionDelivite service;
+    CloudinaryService sc;
+
     @GetMapping("/role/{roleName}")
     public List<User> getUsersByRole(@PathVariable Role roleName) {
         return service.findByRole(roleName);
@@ -66,9 +69,6 @@ public ResponseEntity<String> addUserWithImage(
         @RequestParam(value = "address", required = true) String address,
         @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String dateOfBirthStr,
         @RequestParam(value = "phone_number", required = true) String phone_number) {
-
-
-
 
         try {
             Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
@@ -136,17 +136,19 @@ public ResponseEntity<String> addUserWithImage(
     public List<LogHisorique> getAllLogs(){
         return service.GetAllLog();
     }
-    public User updateUsers(@RequestBody User user){
-        return  service.updateUser(user);
-    }
+
     @PutMapping("/updateLivraison")
     public Livraison updateLivraison(@RequestBody Livraison livraison){
         return  service.updateLivraison(livraison);
     }
-    @PutMapping("/updateUser")
-    public User updateUser(@RequestBody User user){
-        return  service.updateUser(user);
+    @PutMapping("/updateClient")
+    public ResponseEntity<Client> updateClient(@RequestBody Client client) {
+        // Logique pour mettre à jour le client
+        Client updatedClient = service.updateClient(client);
+        return ResponseEntity.ok(updatedClient);
     }
+
+
 
     @PutMapping("/updateVehicule")
     public Vehicule updateVehicule(@RequestBody Vehicule vehicule){
@@ -172,14 +174,14 @@ public ResponseEntity<String> addUserWithImage(
     public void deleteLog(@PathVariable("id") Long LogID){
         service.DeleteLog(LogID);
     }
-    @GetMapping("/calculPrixDelivry")
-    public BigDecimal calculateDeliveryPrice(@RequestParam Long userId, @RequestParam BigDecimal baseDeliveryPrice) {
-        User user = service.getUserById(userId);
-        BigDecimal finalPrice = service.applyDiscounts((Client) user, baseDeliveryPrice);
-        service.updateUser(user);
-        return finalPrice;
-    }
-    @PostMapping("/accept-chauffeur/{id}")
+//    @GetMapping("/calculPrixDelivry")
+//    public BigDecimal calculateDeliveryPrice(@RequestParam Long userId, @RequestParam BigDecimal baseDeliveryPrice) {
+//        User user = service.getUserById(userId);
+//        BigDecimal finalPrice = service.applyDiscounts((Client) user, baseDeliveryPrice);
+//        service.updateUser(user);
+//        return finalPrice;
+//    }
+    @PutMapping("/accept-chauffeur/{id}")
     public Chauffeur acceptChauffeur(@PathVariable Long id) {
         return service.acceptChauffeur(id);
     }
