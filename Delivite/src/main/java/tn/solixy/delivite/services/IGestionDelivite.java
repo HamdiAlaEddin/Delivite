@@ -28,6 +28,7 @@ public interface IGestionDelivite {
     List<Vehicule> retrieveAllVehicule();
     //public void updateUser(User user);
     public Client updateClient(Client user) ;
+    public Chauffeur updateChauffeur(Chauffeur chauffeur);
     Livraison updateLivraison(Livraison l);
     Vehicule updateVehicule(Vehicule v);
     void DeleteUser(Long Uid);
@@ -43,8 +44,10 @@ public interface IGestionDelivite {
     public BigDecimal applyDiscounts(Client user, BigDecimal deliveryPrice);
     public List<User> getAllClients(Role Client);
     public List<User> getAllRestaurants(Role Resto);
-    public List<User> getAllChauffeurs(Role Chauffeur);
+    public List<User> getAllChauffeurs(Role CHAUFFEUR);
     public Chauffeur acceptChauffeur(Long id);
     public ResponseEntity<String> addUserWithImage(String userType, String firstName, String lastName, String password, String email,
                                                    String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number) ;
-    }
+    public ResponseEntity<String> addChauffeurWithImage(String userType, String firstName, String lastName, String password, String email,
+                                                        String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number, String numPermisConduit);
+}

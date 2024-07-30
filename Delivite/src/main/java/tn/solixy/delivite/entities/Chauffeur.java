@@ -16,9 +16,9 @@ import java.util.List;
 @DiscriminatorValue("CHAUFFEUR")
 public class Chauffeur extends User{
     @Column(name = "disponible", nullable = true)
-    private boolean disponible;
+    private boolean disponible = false;
     @Column(name = "accepted", nullable = true)
-    private boolean accepted;
+    private boolean accepted = false;
     @Column(name = "num_permis_conduit", nullable = true)
     private String numPermisConduit;
     @OneToMany(mappedBy = "chauffeur", cascade = CascadeType.ALL)

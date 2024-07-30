@@ -30,7 +30,7 @@ public class DeliviteController {
     public List<User> getUsersByRole(@PathVariable Role roleName) {
         return service.findByRole(roleName);
     }
-    @GetMapping("/getClient/{id}")
+    @GetMapping("/getUser/{id}")
     public User getClient(@PathVariable("id") Long id) {
         return service.getUserById(id);
     }
@@ -106,6 +106,58 @@ public ResponseEntity<String> addUserWithImage(
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout de l'utilisateur.");
     }
 }
+    @PostMapping("/addChauffeur")
+    public ResponseEntity<String> addChauffeurWithImage(
+            @RequestParam(value = "firstName", required = true) String firstName,
+            @RequestParam(value = "lastName", required = true) String lastname,
+            @RequestParam(value = "password", required = true) String password,
+            @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
+            @RequestParam(value = "email", required = true) String email,
+            @RequestParam(value = "location", required = true) String location,
+            @RequestParam(value = "image", required = true) MultipartFile imageFile,
+            @RequestParam(value = "address", required = true) String address,
+            @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String dateOfBirthStr,
+            @RequestParam(value = "phone_number", required = true) String phone_number,
+    @RequestParam(value = "numPermisConduit", required = true) String numPermisConduit){
+
+        try {
+            Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
+            // Log des paramètres reçus
+            System.out.println("firstName: " + firstName);
+            System.out.println("lastName: " + lastname);
+            System.out.println("password: " + password);
+            System.out.println("email: " + email);
+            System.out.println("preferredLanguage: " + preferredLanguage);
+            System.out.println("location: " + location);
+            System.out.println("address: " + address);
+            System.out.println("date_of_birth: " + dateOfBirth);
+            System.out.println("phone_number: " + phone_number);
+            System.out.println("numPermisConduit: " + numPermisConduit);
+            System.out.println("imageFile: " + (imageFile != null ? imageFile.getOriginalFilename() : "null"));
+
+            // Vérifiez que tous les paramètres obligatoires sont présents
+            if (firstName == null || firstName.isEmpty() ||
+                    lastname == null || lastname.isEmpty() ||
+                    password == null || password.isEmpty() ||
+                    preferredLanguage == null || preferredLanguage.isEmpty() ||
+                    email == null || email.isEmpty() ||
+                    location == null || location.isEmpty() ||
+                    imageFile == null || imageFile.isEmpty() ||
+                    address == null || address.isEmpty() ||
+                    dateOfBirth == null ||
+                    phone_number == null || phone_number.isEmpty()||
+                    numPermisConduit == null || numPermisConduit.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tous les paramètres sont obligatoires.");
+            }
+
+            // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
+            service.addChauffeurWithImage("Chauffeur", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number,numPermisConduit);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Chauffeur ajouté avec succès !");
+        } catch (Exception e) {
+            e.printStackTrace(); // ou tout autre traitement d'erreur approprié
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout du Chauffeur.");
+        }
+    }
 
 
     @PostMapping("/addVehicule")
@@ -146,6 +198,12 @@ public ResponseEntity<String> addUserWithImage(
         // Logique pour mettre à jour le client
         Client updatedClient = service.updateClient(client);
         return ResponseEntity.ok(updatedClient);
+    }
+    @PutMapping("/updateChauffeur")
+    public ResponseEntity<Chauffeur> updateChauffeur(@RequestBody Chauffeur chauffeur) {
+        // Logique pour mettre à jour le chauffeur
+        Chauffeur updatedChauffeur = service.updateChauffeur(chauffeur);
+        return ResponseEntity.ok(updatedChauffeur);
     }
 
 

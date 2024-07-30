@@ -97,6 +97,53 @@ public Client updateClient(Client client) {
             throw new EntityNotFoundException("Client not found with id: " + clientId);
         }
     }
+   @Override
+    public Chauffeur updateChauffeur(Chauffeur chauffeur) {
+
+        Long Id = chauffeur.getUserID();
+
+        Optional<User> existingUserOptional = iUserRepository.findById(Id);
+
+        if (existingUserOptional.isPresent() && existingUserOptional.get() instanceof Chauffeur) {
+            Chauffeur existingChauffeur = (Chauffeur) existingUserOptional.get();
+
+            // Mettre à jour uniquement les champs modifiables
+            if (chauffeur.getFirstName() != null) {
+                existingChauffeur.setFirstName(chauffeur.getFirstName());
+            }
+            if (chauffeur.getLastName() != null) {
+                existingChauffeur.setLastName(chauffeur.getLastName());
+            }
+            if (chauffeur.getPassword() != null) {
+                existingChauffeur.setPassword(chauffeur.getPassword());
+            }
+            if (chauffeur.getEmail() != null) {
+                existingChauffeur.setEmail(chauffeur.getEmail());
+            }
+            if (chauffeur.getAddress() != null) {
+                existingChauffeur.setAddress(chauffeur.getAddress());
+            }
+            if (chauffeur.getPhoneNumber() != null) {
+                existingChauffeur.setPhoneNumber(chauffeur.getPhoneNumber());
+            }
+            if (chauffeur.getImage() != null) {
+                existingChauffeur.setImage(chauffeur.getImage());
+            }
+            if (chauffeur.getPreferredLanguage() != null) {
+                existingChauffeur.setPreferredLanguage(chauffeur.getPreferredLanguage());
+            }
+            if (chauffeur.getDateOfBirth() != null) {
+                existingChauffeur.setDateOfBirth(chauffeur.getDateOfBirth());
+            }
+            if (chauffeur.getNumPermisConduit() != null) {
+                existingChauffeur.setNumPermisConduit(chauffeur.getNumPermisConduit());
+            }
+
+            return iUserRepository.save(existingChauffeur);
+        } else {
+            throw new EntityNotFoundException("Chauffeur not found with id: " + Id);
+        }
+    }
 
     @Override
     public Livraison updateLivraison(Livraison l) {
@@ -259,6 +306,83 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
 
     return new ResponseEntity<>("Utilisateur ajouté avec succès", HttpStatus.CREATED);
 }
+    @Transactional
+    public ResponseEntity<String> addChauffeurWithImage(String userType, String firstName, String lastName, String password, String email,
+                                                   String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number, String numPermisConduit) {
+
+        User user =new Chauffeur();
+
+        // Gérer le type d'utilisateur
+        switch (userType.toUpperCase()) {
+            case "CLIENT":
+                user = new Client();
+                user.setRole(Role.CLIENT);
+                break;
+            case "CHAUFFEUR":
+                user = new Chauffeur();
+                user.setRole(Role.CHAUFFEUR);
+                break;
+            case "RESTO":
+                user = new Resto();
+                user.setRole(Role.RESTO);
+                break;
+            case "ADMIN":
+                user = new Admin();
+                user.setRole(Role.ADMIN);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid user type: " + userType);
+        }
+
+        // Remplir les données communes
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setPassword(password);
+        user.setEmail(email);
+        user.setPreferredLanguage(preferredLanguage);
+        user.setLocation(location);
+        user.setAddress(address);
+        user.setDateOfBirth(date_of_birth);
+        user.setPhoneNumber(phone_number);
+        if (user instanceof Chauffeur) {
+            Chauffeur chauffeur = (Chauffeur) user;
+            chauffeur.setNumPermisConduit(numPermisConduit); // Utilisez l'attribut spécifique à Chauffeur
+        } else {
+            // Gérez le cas où l'objet n'est pas une instance de Chauffeur
+            System.out.println("L'objet n'est pas une instance de Chauffeur");
+        }
+
+        // Enregistrer l'image sur Cloudinary
+        Map<String, Object> uploadResult;
+        try {
+            uploadResult = cloudinaryService.upload(imageFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Récupérer l'URL de l'image depuis Cloudinary
+        String imageUrl = (String) uploadResult.get("url");
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new IllegalArgumentException("L'URL de l'image est nulle ou vide.");
+        }
+        Image image = new Image();
+        image.setName(imageFile.getOriginalFilename());
+        image.setImageURL(imageUrl);
+        imageRepository.save(image);
+
+        // Associer l'image à l'utilisateur
+        user.setImage(image);
+
+        // Enregistrer la date d'inscription
+        LocalDate currentDate = LocalDate.now();
+        Date registrationDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        user.setRegistrationDate(registrationDate);
+
+        // Enregistrer l'utilisateur dans le dépôt
+        iUserRepository.save(user);
+
+        return new ResponseEntity<>("Utilisateur ajouté avec succès", HttpStatus.CREATED);
+    }
 
 
     @Override
@@ -388,8 +512,8 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
         return allRestaurants;
     }
     @Override
-    public List<User> getAllChauffeurs(Role Chauffeur) {
-        List<User> allChauffeurs=iUserRepository.findByRole(Chauffeur);
+    public List<User> getAllChauffeurs(Role CHAUFFEUR) {
+        List<User> allChauffeurs=iUserRepository.findByRole(CHAUFFEUR);
         return allChauffeurs;
     }
 
