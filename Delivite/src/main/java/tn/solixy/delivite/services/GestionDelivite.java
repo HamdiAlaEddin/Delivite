@@ -49,6 +49,7 @@ public class GestionDelivite implements IGestionDelivite {
     public List<Livraison> retrieveAllLivraisons() {
         return iLivraisonRepository.findAll();
     }
+
     @Override
     public List<Vehicule> retrieveAllVehicule() {
         return iVehiculeRepository.findAll();
@@ -97,12 +98,10 @@ public Client updateClient(Client client) {
             throw new EntityNotFoundException("Client not found with id: " + clientId);
         }
     }
-   @Override
+    @Override
     public Chauffeur updateChauffeur(Chauffeur chauffeur) {
-
-        Long Id = chauffeur.getUserID();
-
-        Optional<User> existingUserOptional = iUserRepository.findById(Id);
+        Long id = chauffeur.getUserID();
+        Optional<User> existingUserOptional = iUserRepository.findById(id);
 
         if (existingUserOptional.isPresent() && existingUserOptional.get() instanceof Chauffeur) {
             Chauffeur existingChauffeur = (Chauffeur) existingUserOptional.get();
@@ -138,12 +137,21 @@ public Client updateClient(Client client) {
             if (chauffeur.getNumPermisConduit() != null) {
                 existingChauffeur.setNumPermisConduit(chauffeur.getNumPermisConduit());
             }
+            if (chauffeur.getLivraisons() != null) {
+                existingChauffeur.setLivraisons(chauffeur.getLivraisons());
+            }
+
+            if (chauffeur.getLocation() != null) {
+                existingChauffeur.setLocation(chauffeur.getLocation());
+            }
 
             return iUserRepository.save(existingChauffeur);
         } else {
-            throw new EntityNotFoundException("Chauffeur not found with id: " + Id);
+            throw new EntityNotFoundException("Chauffeur not found with id: " + id);
         }
     }
+
+
 
     @Override
     public Livraison updateLivraison(Livraison l) {

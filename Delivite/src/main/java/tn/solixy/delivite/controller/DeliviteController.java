@@ -38,6 +38,14 @@ public class DeliviteController {
     public List<User> getClients() {
         return service.getAllClients(Role.CLIENT);
     }
+    @GetMapping("/getVehicule")
+    public List<Vehicule> getVehic() {
+        return service.retrieveAllVehicule();
+    }
+    @GetMapping("/getVehicule/{id}")
+    public Vehicule getVehicule(@PathVariable("id") Long id) {
+        return service.getVehiculeById(id);
+    }
     @GetMapping("/getChauffeurs")
     public List<User> getChauffeurs() {
         return service.getAllChauffeurs(Role.CHAUFFEUR);
