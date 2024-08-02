@@ -29,6 +29,7 @@ public interface IGestionDelivite {
     //public void updateUser(User user);
     public Client updateClient(Client user) ;
     public Chauffeur updateChauffeur(Chauffeur chauffeur);
+    public Admin updateAdmin(Admin admin);
     Livraison updateLivraison(Livraison l);
     Vehicule updateVehicule(Vehicule v);
     void DeleteUser(Long Uid);
@@ -45,6 +46,7 @@ public interface IGestionDelivite {
     public List<User> getAllClients(Role Client);
     public List<User> getAllRestaurants(Role Resto);
     public List<User> getAllChauffeurs(Role CHAUFFEUR);
+    public List<User> getAllAdmins(Role ADMINS);
     public Chauffeur acceptChauffeur(Long id);
     public ResponseEntity<String> addUserWithImage(String userType, String firstName, String lastName, String password, String email,
                                                    String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number) ;

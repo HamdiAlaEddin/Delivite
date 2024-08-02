@@ -99,6 +99,50 @@ public Client updateClient(Client client) {
         }
     }
     @Override
+            public Admin updateAdmin(Admin admin) {
+
+        Long id = admin.getUserID();
+
+        Optional<User> existingUserOptional = iUserRepository.findById(id);
+
+        if (existingUserOptional.isPresent() && existingUserOptional.get() instanceof Admin) {
+            Admin existingAdmin = (Admin) existingUserOptional.get();
+
+            // Mettre à jour uniquement les champs modifiables
+            if (admin.getFirstName() != null) {
+                existingAdmin.setFirstName(admin.getFirstName());
+            }
+            if (admin.getLastName() != null) {
+                existingAdmin.setLastName(admin.getLastName());
+            }
+            if (admin.getPassword() != null) {
+                existingAdmin.setPassword(admin.getPassword());
+            }
+            if (admin.getEmail() != null) {
+                existingAdmin.setEmail(admin   .getEmail());
+            }
+            if (admin.getAddress() != null) {
+                existingAdmin.setAddress(admin.getAddress());
+            }
+            if (admin.getPhoneNumber() != null) {
+                existingAdmin.setPhoneNumber(admin.getPhoneNumber());
+            }
+            if (admin.getImage() != null) {
+                existingAdmin.setImage(admin.getImage());
+            }
+            if (admin.getPreferredLanguage() != null) {
+                existingAdmin.setPreferredLanguage(admin.getPreferredLanguage());
+            }
+            if (admin.getDateOfBirth() != null) {
+                existingAdmin.setDateOfBirth(admin.getDateOfBirth());
+            }
+
+            return iUserRepository.save(existingAdmin);
+        } else {
+            throw new EntityNotFoundException("Client not found with id: " + id);
+        }
+    }
+    @Override
     public Chauffeur updateChauffeur(Chauffeur chauffeur) {
         Long id = chauffeur.getUserID();
         Optional<User> existingUserOptional = iUserRepository.findById(id);
@@ -523,6 +567,11 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
     public List<User> getAllChauffeurs(Role CHAUFFEUR) {
         List<User> allChauffeurs=iUserRepository.findByRole(CHAUFFEUR);
         return allChauffeurs;
+    }
+    @Override
+    public List<User> getAllAdmins(Role ADMIN) {
+        List<User> allADMINS=iUserRepository.findByRole(ADMIN);
+        return allADMINS;
     }
 
     @Override
