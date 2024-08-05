@@ -99,6 +99,50 @@ public Client updateClient(Client client) {
         }
     }
     @Override
+    public Resto updateResto(Resto rs) {
+
+        Long Id = rs.getUserID();
+
+        Optional<User> existingUserOptional = iUserRepository.findById(Id);
+
+        if (existingUserOptional.isPresent() && existingUserOptional.get() instanceof Resto) {
+            Resto existingRS = (Resto) existingUserOptional.get();
+
+            // Mettre à jour uniquement les champs modifiables
+            if (rs.getFirstName() != null) {
+                existingRS.setFirstName(rs.getFirstName());
+            }
+            if (rs.getLastName() != null) {
+                existingRS.setLastName(rs.getLastName());
+            }
+            if (rs.getPassword() != null) {
+                existingRS.setPassword(rs.getPassword());
+            }
+            if (rs.getEmail() != null) {
+                existingRS.setEmail(rs.getEmail());
+            }
+            if (rs.getAddress() != null) {
+                existingRS.setAddress(rs.getAddress());
+            }
+            if (rs.getPhoneNumber() != null) {
+                existingRS.setPhoneNumber(rs.getPhoneNumber());
+            }
+            if (rs.getImage() != null) {
+                existingRS.setImage(rs.getImage());
+            }
+            if (rs.getPreferredLanguage() != null) {
+                existingRS.setPreferredLanguage(rs.getPreferredLanguage());
+            }
+            if (rs.getDateOfBirth() != null) {
+                existingRS.setDateOfBirth(rs.getDateOfBirth());
+            }
+
+            return iUserRepository.save(existingRS);
+        } else {
+            throw new EntityNotFoundException("Resto not found with id: " + Id);
+        }
+    }
+    @Override
             public Admin updateAdmin(Admin admin) {
 
         Long id = admin.getUserID();
@@ -207,17 +251,18 @@ public Client updateClient(Client client) {
     }
     @Override
     public void DeleteUser(Long Uid) {
-
         Optional<User> USOptional = iUserRepository.findById(Uid);
         if (USOptional.isPresent()) {
             User user = USOptional.get();
-            String imageURL = user.getImage().getImageURL();
-            Long imageId = user.getImage().getId();
-            deleteImageFromCloudinary(imageURL);
+            if (user.getImage() != null) {
+                String imageURL = user.getImage().getImageURL();
+                Long imageId = user.getImage().getId();
+                deleteImageFromCloudinary(imageURL);
+            }
             iUserRepository.deleteById(Uid);
         }
-
     }
+
     @Override
     public void DeleteLivraison(Long Lid) {
         iLivraisonRepository.deleteById(Lid);
@@ -578,8 +623,9 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
     public Chauffeur acceptChauffeur(Long id) {
         Chauffeur chauffeur = (Chauffeur) iUserRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Chauffeur not found"));
-        chauffeur.setAccepted(true);
+        chauffeur.setAccepted(!chauffeur.isAccepted());
         return iUserRepository.save(chauffeur);
     }
+
 }
 

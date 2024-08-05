@@ -30,6 +30,7 @@ public interface IGestionDelivite {
     public Client updateClient(Client user) ;
     public Chauffeur updateChauffeur(Chauffeur chauffeur);
     public Admin updateAdmin(Admin admin);
+    public Resto updateResto(Resto rs);
     Livraison updateLivraison(Livraison l);
     Vehicule updateVehicule(Vehicule v);
     void DeleteUser(Long Uid);
