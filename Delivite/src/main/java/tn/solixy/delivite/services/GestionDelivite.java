@@ -3,8 +3,10 @@ import com.cloudinary.utils.ObjectUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.entities.*;
@@ -14,7 +16,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,7 +30,44 @@ public class GestionDelivite implements IGestionDelivite {
      IImageRepository imageRepository;
      NoteRepository noteRepository;
 
-   @Override
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public void createUser(User user) {
+        //crypt password
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        //add user
+        iUserRepository.save(user);
+    }
+
+    @Override
+    public boolean login(String username, String password) {
+        User user = iUserRepository.findByEmail(username);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+            // Successful login
+            return true;
+        }
+        return false;
+    }
+    @Override
+    public User getUserByEmail(String email) {
+        return iUserRepository.findByEmail(email);
+    }
+    @Override
+    public boolean resetPassword(long userId, String newPassword) {
+        User user = iUserRepository.findById(userId).orElse(null);
+        if (user != null) {
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
+            iUserRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+    @Override
    public Livraison getLivraisonById(Long idL) {
        return iLivraisonRepository.findById(idL).get();
    }

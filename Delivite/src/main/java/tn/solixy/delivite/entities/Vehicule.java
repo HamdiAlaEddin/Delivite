@@ -26,6 +26,8 @@ public class Vehicule {
     private String couleur;
     @OneToMany(mappedBy = "vehic")
     private List<LogHisorique> loghs;
+    @OneToMany(mappedBy = "vehicule")
+    private List<Livraison> livraisons;
 
 
 }

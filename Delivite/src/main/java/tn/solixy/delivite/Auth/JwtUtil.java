@@ -1,19 +1,38 @@
 package tn.solixy.delivite.Auth;
 
+import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import tn.solixy.delivite.services.GestionDelivite;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtUtil {
-   /* GestionUserImpl userService = new GestionUserImpl();
-
+     GestionDelivite userService;
     private final String secret_key = "mysecretkeyisnotwhatyouthinkaboutbrodontworryaboutithahahahahahahahahahahahahaha";
     private final long accessTokenValidity = 10*60*60*1000;
 
-    private final JwtParser jwtParser;
+    public JwtParser jwtParser;
 
     private final String TOKEN_HEADER = "Authorization";
     private final String TOKEN_PREFIX = "Bearer ";
 
+    @Autowired
+    public JwtUtil(@Lazy GestionDelivite userService) {
+        // Simple vérification
+        if (userService == null) {
+            throw new IllegalArgumentException("GestionDelivite must not be null");
+        }
+        this.userService = userService;
+    }
     public JwtUtil(){
         this.jwtParser = Jwts.parser().setSigningKey(secret_key);
     }
@@ -48,8 +67,6 @@ public class JwtUtil {
         Claims c = parseJwtClaims(token);
         return c.getSubject();
     }
-
-
     private Claims parseJwtClaims(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
         return jwtParser.parseClaimsJws(token).getBody();
     }
@@ -94,5 +111,5 @@ public class JwtUtil {
     private List<String> getRoles(Claims claims) {
         return (List<String>) claims.get("roles");
     }
-*/
+
 }

@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,4 +24,6 @@ public class Client  extends User{
         super();
         this.setRole(Role.CLIENT);
     }
+    @OneToMany(mappedBy = "cli", cascade = CascadeType.ALL)
+    private List<Livraison> livraisons = new ArrayList<>();
 }

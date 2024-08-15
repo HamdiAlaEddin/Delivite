@@ -1,5 +1,6 @@
 package tn.solixy.delivite.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,14 +32,18 @@ public class Livraison {
     @DateTimeFormat(pattern = "YYYY-MM-DD")
     private Date dateLivraison;
     private String adresseLivraison;
-    private Long id_client;
+    @ManyToOne
+    @JoinColumn(name = "id_client")
+    private Client cli;
     private String position;//GPS
     private BigDecimal prix;
     private String description;
     @ManyToOne
     @JoinColumn(name = "id_chauffeur")
     private Chauffeur chauf;
-    private Long id_vehicule;
+    @ManyToOne
+    private Vehicule vehicule;
     @OneToMany(mappedBy = "livr")
+    @JsonIgnore
     private List<LogHisorique> loghs;
 }

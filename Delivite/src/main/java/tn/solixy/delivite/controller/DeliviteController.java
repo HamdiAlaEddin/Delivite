@@ -1,21 +1,34 @@
 package tn.solixy.delivite.controller;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tn.solixy.delivite.Auth.JwtUtil;
+import tn.solixy.delivite.dto.Commandedto;
+import tn.solixy.delivite.dto.LoginRequest;
+import tn.solixy.delivite.dto.ResetPasswordRequest;
 import tn.solixy.delivite.entities.*;
-import tn.solixy.delivite.repositories.IImageRepository;
-import tn.solixy.delivite.repositories.IUserRepository;
-import tn.solixy.delivite.services.CloudinaryService;
-import tn.solixy.delivite.services.IGestionDelivite;
+import tn.solixy.delivite.services.*;
+
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -25,7 +38,126 @@ import java.util.List;
 public class DeliviteController {
     IGestionDelivite service;
     CloudinaryService sc;
+    @Autowired
+    UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtil jwt;
+    @PostMapping("/authenticate_user")
+    public ResponseEntity<?> authenticate(@RequestBody LoginRequest loginRequest) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        try{
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
+            if(authentication.isAuthenticated()){
+                //Create UserDetails for token creation
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+                User user = service.getUserByEmail(loginRequest.getUsername());
+                //Create token
+                String token = jwt.createToken(userDetails);
+                map.put("status", 200);
+                map.put("message", "success");
+                map.put("token",token);
+                map.put("role", user.getRole());
+                return new ResponseEntity<Object>(map, HttpStatus.OK);
+                //return ResponseEntity.ok(token);
+            }else {
+                map.put("status", 400);
+                map.put("message", "There was a problem");
+                return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
+            }
+        }catch( BadCredentialsException ex){
+            map.put("message", "Bad credentials");
+            map.put("status", 401);
+            return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
+        }catch ( LockedException e){
+            map.put("message", "Your account is locked");
+            map.put("status", 401);
+            return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
+        }catch ( DisabledException e){
+            map.put("message", "Your account is disabled");
+            map.put("status", 401);
+            return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
+        }
+    }
 
+    @PostMapping("/register_user")
+    public ResponseEntity<?> register(@RequestBody User user) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        // Check if the user with the same email already exists
+        if (service.getUserByEmail(user.getEmail()) != null) {
+            // User with the same email already exists
+            map.put("message", "You already have an account");
+            map.put("status", 401);
+            return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
+        }
+
+        // add user to database
+        service.createUser(user);
+
+        // Registration successful
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        //Create token
+        String token = jwt.createToken(userDetails);
+        map.put("message", "Account created successfully");
+        map.put("status", 201);
+        map.put("token",token);
+        return new ResponseEntity<Object>(map, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/getbytoken")
+    public User getUserByToken(@RequestBody String token) {
+        String email = jwt.getEmailFromToken(token);
+        return service.getUserByEmail(email);
+    }
+    @PostMapping("/resetpassword")
+    public ResponseEntity resetPassword(@RequestBody ResetPasswordRequest request){
+        if(jwt.isPasswordToken(request.getToken())){
+            String email;
+            try{
+                email = jwt.getEmailFromToken(request.getToken());
+            } catch (ExpiredJwtException | SignatureException | UnsupportedJwtException |
+                     MalformedJwtException exception){
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            User user = service.getUserByEmail(email);
+            service.resetPassword(user.getUserID(),request.getPassword());
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/resetpasswordrequest")
+    public ResponseEntity resetPasswordRequest(@RequestBody String email){
+        User user = service.getUserByEmail(email);
+        System.out.println("email: "+email);
+        System.out.println("user: "+user);
+        String token = jwt.createPasswordToken(userDetailsService.loadUserByUsername(email));
+        System.out.println("token: "+token);
+        //mailer.sendForgotPasswordEmail(user, token);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/admin/resetpassword")
+    public ResponseEntity adminResetPassword(@RequestBody Long id){
+        Map<String, Object> map = new HashMap<String, Object>();
+        User user = service.getUserById(id);
+        System.out.println(user);
+        String token = jwt.createPasswordToken(userDetailsService.loadUserByUsername(user.getEmail()));
+        System.out.println(token);
+        map.put("token",token);
+        return new ResponseEntity<Object>(map, HttpStatus.OK);
+    }
+
+    @PostMapping("/admin/getbytoken")
+    public ResponseEntity getAdminByToken(@RequestBody String token) {
+        String email = jwt.getEmailFromToken(token);
+        User user = service.getUserByEmail(email);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("name",user.getFirstName());
+        map.put("role","ADMIN");
+        return new ResponseEntity<Object>(map, HttpStatus.OK);
+    }
     @GetMapping("/role/{roleName}")
     public List<User> getUsersByRole(@PathVariable Role roleName) {
         return service.findByRole(roleName);
@@ -288,6 +420,14 @@ public ResponseEntity<String> addUserWithImage(
     public List<Livraison> getAllLivraison(){
         return service.retrieveAllLivraisons();
     }
+    @GetMapping("/getallCommande")
+    public ResponseEntity<List<Commandedto>> getAllLivraisons() {
+        List<Livraison> livraisons = service.retrieveAllLivraisons();
+        List<Commandedto> dtos = livraisons.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
     @GetMapping("/getallUsers")
     public List<User> getAllUsers(){
         return service.retrieveAllUsers();
@@ -310,6 +450,31 @@ public ResponseEntity<String> addUserWithImage(
         // Logique pour mettre à jour le client
         Client updatedClient = service.updateClient(client);
         return ResponseEntity.ok(updatedClient);
+    }
+    private Commandedto mapToDto(Livraison livraison) {
+        String vehiculeImmat = ""; // Initialiser avec une valeur par défaut
+        if (livraison.getVehicule() != null ) {
+            // Suppose que nous voulons l'immatriculation du premier véhicule associé
+            vehiculeImmat = livraison.getVehicule().getImmatriculation();
+        }
+
+        return new Commandedto(
+                livraison.getLivraisonID(),
+                livraison.getStatus(),
+                livraison.getType(),
+                livraison.getPaiement(),
+                livraison.getDateCommande(),
+                livraison.getDateLivraison(),
+                livraison.getAdresseLivraison(),
+                livraison.getCli().getFirstName(),
+                livraison.getCli().getLastName(),
+                livraison.getPosition(),
+                livraison.getPrix(),
+                livraison.getDescription(),
+                livraison.getChauf().getFirstName(),
+                livraison.getChauf().getLastName(),
+               livraison.getVehicule().getImmatriculation()
+        );
     }
     @PutMapping("/updateRestaurant")
     public ResponseEntity<Resto> updateRestaurant(@RequestBody Resto rs) {

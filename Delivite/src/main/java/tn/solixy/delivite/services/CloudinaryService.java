@@ -1,5 +1,4 @@
 package tn.solixy.delivite.services;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.cloudinary.Cloudinary;
@@ -22,6 +21,7 @@ public class CloudinaryService {
         valuesMap.put("api_secret", "pxrvNP67x--Hihbz9zxQA0F3dvk");
         cloudinary = new Cloudinary(valuesMap);
     }
+
     private File convert(MultipartFile multipartFile) throws IOException {
         File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
         FileOutputStream fo = new FileOutputStream(file);
