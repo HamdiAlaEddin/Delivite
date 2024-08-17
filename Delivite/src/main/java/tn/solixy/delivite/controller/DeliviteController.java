@@ -82,7 +82,7 @@ public class DeliviteController {
     }
 
     @PostMapping("/register_user")
-    public ResponseEntity<?> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody Client user) {
         Map<String, Object> map = new HashMap<String, Object>();
         // Check if the user with the same email already exists
         if (service.getUserByEmail(user.getEmail()) != null) {

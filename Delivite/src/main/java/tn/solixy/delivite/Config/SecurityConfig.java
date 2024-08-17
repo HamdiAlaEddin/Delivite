@@ -26,10 +26,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .authorizeHttpRequests((requests) -> requests
-                                .requestMatchers("/user/register_user","/user/authenticate_user","/user/getbyid/**","/user/resetpassword","/user/resetpasswordrequest","/user/getAllUsers").permitAll() // Always allowed
+                                .requestMatchers("/user/register_user","/Delivite/authenticate_user","/user/getbyid/**","/user/resetpassword","/user/resetpasswordrequest","/user/getAllUsers").permitAll() // Always allowed
                                 .requestMatchers("/user/getbytoken").authenticated() // authentication only
                                 .requestMatchers("/admin/**","/user/admin/**").hasRole("ADMIN") // needs admin role
-                        //.anyRequest().permitAll() // the rest requires authentication
+                       .anyRequest().permitAll() // the rest requires authentication
                 ).sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
