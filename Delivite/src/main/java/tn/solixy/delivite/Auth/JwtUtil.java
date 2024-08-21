@@ -2,6 +2,7 @@ package tn.solixy.delivite.Auth;
 
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.AuthenticationException;
@@ -13,9 +14,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
+@AllArgsConstructor
 @Component
 public class JwtUtil {
+
      GestionDelivite userService;
     private final String secret_key = "mysecretkeyisnotwhatyouthinkaboutbrodontworryaboutithahahahahahahahahahahahahaha";
     private final long accessTokenValidity = 10*60*60*1000;
@@ -32,10 +34,9 @@ public class JwtUtil {
             throw new IllegalArgumentException("GestionDelivite must not be null");
         }
         this.userService = userService;
-    }
-    public JwtUtil(){
         this.jwtParser = Jwts.parser().setSigningKey(secret_key);
     }
+    public JwtUtil(){this.jwtParser = Jwts.parser().setSigningKey(secret_key);}
 
     public String createToken(UserDetails user) {
         Claims claims = Jwts.claims().setSubject(user.getUsername());

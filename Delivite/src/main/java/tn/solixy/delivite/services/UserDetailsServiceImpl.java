@@ -1,4 +1,5 @@
 package tn.solixy.delivite.services;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -9,6 +10,7 @@ import tn.solixy.delivite.repositories.IUserRepository;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    @Autowired
     IUserRepository repo;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

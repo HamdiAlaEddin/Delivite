@@ -47,8 +47,10 @@ public class DeliviteController {
     @PostMapping("/authenticate_user")
     public ResponseEntity<?> authenticate(@RequestBody LoginRequest loginRequest) {
         Map<String, Object> map = new HashMap<String, Object>();
+        System.out.println(loginRequest.getUsername()+loginRequest.getPassword());
         try{
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
+
             if(authentication.isAuthenticated()){
                 //Create UserDetails for token creation
                 UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
