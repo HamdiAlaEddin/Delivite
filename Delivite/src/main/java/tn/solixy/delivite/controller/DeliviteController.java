@@ -29,8 +29,10 @@ import java.text.SimpleDateFormat;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/Delivite")
@@ -107,10 +109,8 @@ public class DeliviteController {
             map.put("status", 401);
             return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
         }
-
         // add user to database
         service.createUser(user);
-
         // Registration successful
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         //Create token
@@ -120,7 +120,6 @@ public class DeliviteController {
         map.put("token",token);
         return new ResponseEntity<Object>(map, HttpStatus.CREATED);
     }
-
     @PostMapping("/getbytoken")
     public User getUserByToken(@RequestBody String token) {
         String email = jwt.getEmailFromToken(token);
@@ -217,11 +216,14 @@ public class DeliviteController {
 //        // Enregistrer l'utilisateur
 //        return service.addUser(String.valueOf(role),user);
 //    }
-@SneakyThrows
+
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+    @SneakyThrows
 @PostMapping("/addUser")
-public ResponseEntity<String> addUserWithImage(
+public ResponseEntity<Map<String, Object>> addUserWithImage(
         @RequestParam(value = "firstName", required = true) String firstName,
-        @RequestParam(value = "lastName", required = true) String lastname,
+        @RequestParam(value = "lastName", required = true) String lastName,
         @RequestParam(value = "password", required = true) String password,
         @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
         @RequestParam(value = "email", required = true) String email,
@@ -229,25 +231,31 @@ public ResponseEntity<String> addUserWithImage(
         @RequestParam(value = "image", required = true) MultipartFile imageFile,
         @RequestParam(value = "address", required = true) String address,
         @RequestParam(value = "date_of_birth", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String dateOfBirthStr,
-        @RequestParam(value = "phone_number", required = true) String phone_number) {
+        @RequestParam(value = "phone_number", required = true) String phoneNumber) {
 
-        try {
-            Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
-        // Log des paramètres reçus
+    Map<String, Object> response = new HashMap<>();
+
+    try {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String encodedPassword = encoder.encode(password);
+        // Parse date of birth
+        Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
+
+        // Log received parameters (for debugging)
         System.out.println("firstName: " + firstName);
-        System.out.println("lastName: " + lastname);
+        System.out.println("lastName: " + lastName);
         System.out.println("password: " + password);
         System.out.println("email: " + email);
         System.out.println("preferredLanguage: " + preferredLanguage);
         System.out.println("location: " + location);
         System.out.println("address: " + address);
         System.out.println("date_of_birth: " + dateOfBirth);
-        System.out.println("phone_number: " + phone_number);
+        System.out.println("phone_number: " + phoneNumber);
         System.out.println("imageFile: " + (imageFile != null ? imageFile.getOriginalFilename() : "null"));
 
-        // Vérifiez que tous les paramètres obligatoires sont présents
+        // Validate mandatory parameters
         if (firstName == null || firstName.isEmpty() ||
-                lastname == null || lastname.isEmpty() ||
+                lastName == null || lastName.isEmpty() ||
                 password == null || password.isEmpty() ||
                 preferredLanguage == null || preferredLanguage.isEmpty() ||
                 email == null || email.isEmpty() ||
@@ -255,18 +263,37 @@ public ResponseEntity<String> addUserWithImage(
                 imageFile == null || imageFile.isEmpty() ||
                 address == null || address.isEmpty() ||
                 dateOfBirth == null ||
-                phone_number == null || phone_number.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tous les paramètres sont obligatoires.");
+                phoneNumber == null || phoneNumber.isEmpty()) {
+            response.put("message", "Tous les paramètres sont obligatoires.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
-        // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
-        service.addUserWithImage("CLIENT", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Utilisateur ajouté avec succès !");
+        // Check if the user with the same email already exists
+        if (service.getUserByEmail(email) != null) {
+            response.put("message", "Un utilisateur avec cet e-mail existe déjà.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // Create and save user
+        service.addUserWithImage("CLIENT", firstName, lastName, encodedPassword, email, preferredLanguage, location, imageFile, address, dateOfBirth, phoneNumber);
+
+
+        // Generate token
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        String token = jwt.createToken(userDetails);
+
+        response.put("message", "Utilisateur ajouté avec succès !");
+        response.put("status", HttpStatus.CREATED.value());
+        response.put("token", token);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
     } catch (Exception e) {
-        e.printStackTrace(); // ou tout autre traitement d'erreur approprié
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout de l'utilisateur.");
+        e.printStackTrace(); // Handle the exception properly in production
+        response.put("message", "Erreur lors de l'ajout de l'utilisateur.");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
+
     @PostMapping("/addRestaurant")
     public ResponseEntity<String> addRestoWithImage(
             @RequestParam(value = "firstName", required = true) String firstName,
@@ -281,6 +308,8 @@ public ResponseEntity<String> addUserWithImage(
             @RequestParam(value = "phone_number", required = true) String phone_number) {
 
         try {
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            String encodedPassword = encoder.encode(password);
             Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
             // Log des paramètres reçus
             System.out.println("firstName: " + firstName);
@@ -309,7 +338,7 @@ public ResponseEntity<String> addUserWithImage(
             }
 
             // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
-            service.addUserWithImage("RESTO", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
+            service.addUserWithImage("RESTO", firstName, lastname, encodedPassword, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
             return ResponseEntity.status(HttpStatus.CREATED).body("Restaurant ajouté avec succès !");
         } catch (Exception e) {
             e.printStackTrace(); // ou tout autre traitement d'erreur approprié
@@ -331,6 +360,8 @@ public ResponseEntity<String> addUserWithImage(
             @RequestParam(value = "phone_number", required = true) String phone_number) {
 
         try {
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            String encodedPassword = encoder.encode(password);
             Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
             // Log des paramètres reçus
             System.out.println("firstName: " + firstName);
@@ -359,7 +390,7 @@ public ResponseEntity<String> addUserWithImage(
             }
 
             // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
-            service.addUserWithImage("ADMIN", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
+            service.addUserWithImage("ADMIN", firstName, lastname, encodedPassword, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number);
             return ResponseEntity.status(HttpStatus.CREATED).body("Admin ajouté avec succès !");
         } catch (Exception e) {
             e.printStackTrace(); // ou tout autre traitement d'erreur approprié
@@ -381,6 +412,8 @@ public ResponseEntity<String> addUserWithImage(
     @RequestParam(value = "numPermisConduit", required = true) String numPermisConduit){
 
         try {
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            String encodedPassword = encoder.encode(password);
             Date dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(dateOfBirthStr);
             // Log des paramètres reçus
             System.out.println("firstName: " + firstName);
@@ -411,7 +444,7 @@ public ResponseEntity<String> addUserWithImage(
             }
 
             // Appel de la méthode de service pour ajouter l'utilisateur avec l'image
-            service.addChauffeurWithImage("Chauffeur", firstName, lastname, password, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number,numPermisConduit);
+            service.addChauffeurWithImage("Chauffeur", firstName, lastname, encodedPassword, email, preferredLanguage, location, imageFile, address, dateOfBirth, phone_number,numPermisConduit);
             return ResponseEntity.status(HttpStatus.CREATED).body("Chauffeur ajouté avec succès !");
         } catch (Exception e) {
             e.printStackTrace(); // ou tout autre traitement d'erreur approprié
