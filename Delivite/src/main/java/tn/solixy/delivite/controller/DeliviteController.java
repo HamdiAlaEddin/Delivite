@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.Auth.JwtUtil;
 import tn.solixy.delivite.dto.Commandedto;
+
 import tn.solixy.delivite.dto.LoginRequest;
 import tn.solixy.delivite.dto.ResetPasswordRequest;
 import tn.solixy.delivite.entities.*;
@@ -24,10 +27,7 @@ import tn.solixy.delivite.services.*;
 
 import java.text.SimpleDateFormat;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -82,7 +82,21 @@ public class DeliviteController {
             return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);
         }
     }
-
+    @GetMapping("/isLoggedIn")
+    public ResponseEntity<Map<String, Boolean>> isLoggedIn(HttpServletRequest request) {
+        boolean loggedIn = false /* logique pour vérifier si l'utilisateur est connecté */;
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("loggedIn", loggedIn);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/logout")
+    public void logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            // Invalider la session ou le token selon votre implémentation
+            SecurityContextHolder.clearContext();
+        }
+    }
     @PostMapping("/register_user")
     public ResponseEntity<?> register(@RequestBody Client user) {
         Map<String, Object> map = new HashMap<String, Object>();
