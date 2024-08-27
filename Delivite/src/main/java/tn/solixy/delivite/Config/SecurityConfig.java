@@ -1,4 +1,5 @@
 package tn.solixy.delivite.Config;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import tn.solixy.delivite.Auth.JwtFilter;
 import tn.solixy.delivite.services.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -24,17 +25,24 @@ public class SecurityConfig {
     private final JwtFilter jwtAuthenticationFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable) // Disable CSRF
+        http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((requests) -> requests
-                                .requestMatchers("/user/register_user","/Delivite/authenticate_user","/user/getbyid/**","/user/resetpassword","/user/resetpasswordrequest","/user/getAllUsers").permitAll() // Always allowed
-                                .requestMatchers("/user/getbytoken").authenticated() // authentication only
-                                .requestMatchers("/admin/**","/user/admin/**").hasRole("ADMIN") // needs admin role
-                       .anyRequest().permitAll() // the rest requires authentication
-                ).sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
-                .authenticationProvider(authenticationProvider()).addFilterBefore(
-                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers("/Delivite/addUser", "/Delivite/addRestaurant", "/Delivite/authenticate_user", "/Delivite/resetpassword", "/Delivite/resetpasswordrequest").permitAll() // Ces chemins sont accessibles à tous
+                        .requestMatchers("/Delivite/admin/**", "/admin/**").hasRole("ADMIN") // Chemins spécifiques au rôle ADMIN
+                        .requestMatchers("/Delivite/user/**", "/user/**").hasAnyRole("RESTO", "CLIENT", "CHAUFFEUR")
+                 //       .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedPage("/login") // Page d'erreur pour accès refusé
+                );
+
         return http.build();
     }
+
 
     @Bean
     public UserDetailsService userDetailsService() {

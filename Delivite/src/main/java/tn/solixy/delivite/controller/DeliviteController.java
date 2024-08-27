@@ -120,10 +120,19 @@ public class DeliviteController {
         map.put("token",token);
         return new ResponseEntity<Object>(map, HttpStatus.CREATED);
     }
-    @PostMapping("/getbytoken")
+    @PostMapping("/user/getbytoken")
     public User getUserByToken(@RequestBody String token) {
         String email = jwt.getEmailFromToken(token);
         return service.getUserByEmail(email);
+    }
+    @PostMapping("/user/getClbytok")
+    public ResponseEntity getusByToken(@RequestBody String token) {
+        String email = jwt.getEmailFromToken(token);
+        User user = service.getUserByEmail(email);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("name",user.getFirstName());
+        map.put("role","CLIENT");
+        return new ResponseEntity<Object>(map, HttpStatus.OK);
     }
     @PostMapping("/resetpassword")
     public ResponseEntity resetPassword(@RequestBody ResetPasswordRequest request){
@@ -217,10 +226,10 @@ public class DeliviteController {
 //        return service.addUser(String.valueOf(role),user);
 //    }
 
-    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
 
     @SneakyThrows
-@PostMapping("/addUser")
+@PostMapping("/user/addUser")
 public ResponseEntity<Map<String, Object>> addUserWithImage(
         @RequestParam(value = "firstName", required = true) String firstName,
         @RequestParam(value = "lastName", required = true) String lastName,
@@ -294,7 +303,7 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     }
 }
 
-    @PostMapping("/addRestaurant")
+    @PostMapping("/user/addRestaurant")
     public ResponseEntity<String> addRestoWithImage(
             @RequestParam(value = "firstName", required = true) String firstName,
             @RequestParam(value = "lastName", required = true) String lastname,
@@ -397,7 +406,7 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout de l'Admin.");
         }
     }
-    @PostMapping("/addChauffeur")
+    @PostMapping("/user/addChauffeur")
     public ResponseEntity<String> addChauffeurWithImage(
             @RequestParam(value = "firstName", required = true) String firstName,
             @RequestParam(value = "lastName", required = true) String lastname,
