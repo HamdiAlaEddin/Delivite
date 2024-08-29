@@ -229,7 +229,7 @@ public class DeliviteController {
 
 
     @SneakyThrows
-@PostMapping("/user/addUser")
+@PostMapping("/addUser")
 public ResponseEntity<Map<String, Object>> addUserWithImage(
         @RequestParam(value = "firstName", required = true) String firstName,
         @RequestParam(value = "lastName", required = true) String lastName,
@@ -303,7 +303,7 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     }
 }
 
-    @PostMapping("/user/addRestaurant")
+    @PostMapping("/addRestaurant")
     public ResponseEntity<String> addRestoWithImage(
             @RequestParam(value = "firstName", required = true) String firstName,
             @RequestParam(value = "lastName", required = true) String lastname,
@@ -406,7 +406,7 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout de l'Admin.");
         }
     }
-    @PostMapping("/user/addChauffeur")
+    @PostMapping("/addChauffeur")
     public ResponseEntity<String> addChauffeurWithImage(
             @RequestParam(value = "firstName", required = true) String firstName,
             @RequestParam(value = "lastName", required = true) String lastname,
