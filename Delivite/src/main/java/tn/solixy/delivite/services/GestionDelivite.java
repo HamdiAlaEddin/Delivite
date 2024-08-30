@@ -6,9 +6,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import tn.solixy.delivite.dto.Commandedto;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.repositories.*;
 import java.io.IOException;
@@ -31,6 +33,8 @@ public class GestionDelivite implements IGestionDelivite {
      NoteRepository noteRepository;
 
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -577,44 +581,85 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
             iUserRepository.save(chauffeur);
         }
     }
-   /*   @Override
-    public Optional<Chauffeur> choisirChauffeur(String location) {
-        List<Chauffeur> chauffeurs = iUserRepository.findByDisponibleTrueAndAcceptedTrueOrderByNoteDesc();
-        if (!chauffeurs.isEmpty()) {
-            return Optional.of(chauffeurs.get(0));
+
+    public Chauffeur assignChauffeur(Client client) {
+        // Récupérer tous les chauffeurs acceptés et disponibles
+        List<Chauffeur> chauffeursDisponibles = iUserRepository.findByAcceptedTrueAndDisponibleTrue();
+
+        // Si aucun chauffeur n'est disponible, retourner null ou gérer le cas différemment
+        if (chauffeursDisponibles.isEmpty()) {
+            return null; // Ou vous pouvez lever une exception ou retourner un message d'erreur
         }
-        return Optional.empty();
+
+        // Filtrer les chauffeurs par leur note (optionnel)
+        Chauffeur chauffeurAvecMeilleureNote = chauffeursDisponibles.stream()
+                .max(Comparator.comparingDouble(this::calculateAverageRating))
+                .orElse(chauffeursDisponibles.get(0)); // Prendre le premier disponible s'il n'y a pas de notes
+
+        // Marquer le chauffeur comme indisponible
+        chauffeurAvecMeilleureNote.setDisponible(false);
+        iUserRepository.save(chauffeurAvecMeilleureNote);
+
+        return chauffeurAvecMeilleureNote;
     }
-  @Override
-    public List<Vehicule> findAvailableVehicles() {
-        List<Vehicule> vehiclesNotAssignedToActiveDelivery = iVehiculeRepository.findAll();
-        return vehiclesNotAssignedToActiveDelivery.stream()
-                .filter(vehicule -> vehicule.getChauffeurs().stream()
-                        .anyMatch(chauffeur -> chauffeur.isDisponible() && chauffeur.isAccepted()))
-                .collect(Collectors.toList());
+
+    // Méthode pour calculer la note moyenne d'un chauffeur
+    private double calculateAverageRating(Chauffeur chauffeur) {
+        return chauffeur.getNotes().stream()
+                .mapToDouble(note -> note.getRate().getValue()) // Map enum to its numeric value
+                .average()
+                .orElse(0.0);
     }
+/////////////////////////////////////////////////////////////
     @Override
-    public Optional<Livraison> affecterLivraison(Long livraisonId) {
-        Optional<Livraison> livraisonOpt = iLivraisonRepository.findById(livraisonId);
-        if (livraisonOpt.isPresent()) {
-            Livraison livraison = livraisonOpt.get();
-            List<Vehicule> vehiculesDisponibles = findAvailableVehicles();
-            if (!vehiculesDisponibles.isEmpty()) {
-                Vehicule vehicule = vehiculesDisponibles.get(0);
-                Chauffeur chauffeur = vehicule.getChauffeurs().stream()
-                        .filter(c -> c.isDisponible() && c.isAccepted())
-                        .findFirst()
-                        .orElse(null);
-                if (chauffeur != null) {
-                    livraison.setId_vehicule(vehicule.getVehiculeID());
-                    livraison.setId_chauffeur(chauffeur.getUserID());
-                    iLivraisonRepository.save(livraison);
-                    return Optional.of(livraison);
-                }
-            }
-        }
-        return Optional.empty();
-   }*/
+public void processLivraisonRequest(Commandedto request) {
+    // Vérifiez si le client et le restaurant existent
+    Client client = (Client) iUserRepository.findByEmail(request.getClientmail());
+    Resto resto = (Resto) iUserRepository.findByEmail(request.getRestomail());
+
+
+    // Créez la livraison
+    Livraison livraison = new Livraison();
+    livraison.setCli(client);
+    livraison.setAdresseLivraison(client.getAddress()); // Assurez-vous que l'adresse du client est correcte
+    livraison.setType(request.getTypelivraison());
+    livraison.setPrix(request.getPrice());
+    livraison.setDescription(request.getDescription());
+    livraison.setStatus(StatusLivraison.EnAttente);
+
+    // Trouver un chauffeur disponible et capable
+    Chauffeur chauffeur = trouverChauffeurDisponible(livraison);
+
+    if (chauffeur != null) {
+        // Assignez le chauffeur à la livraison
+        livraison.setChauf(chauffeur);
+        livraison.setStatus(StatusLivraison.EnRoute);
+        iLivraisonRepository.save(livraison);
+
+        // Notifiez le chauffeur
+        envoyerNotificationAuChauffeur(chauffeur, livraison);
+    } else {
+        throw new RuntimeException("Aucun chauffeur disponible pour cette livraison");
+    }
+}
+    private Chauffeur trouverChauffeurDisponible(Livraison livraison) {
+        // Trouver un chauffeur disponible et accepté
+        return iUserRepository.findByAcceptedTrueAndDisponibleTrue().stream().findFirst().orElse(null);
+    }
+
+    public void envoyerNotificationAuChauffeur(Chauffeur chauffeur, Livraison livraison) {
+        // Construisez le message de notification
+        String notificationMessage = "Nouvelle livraison ID: " + livraison.getLivraisonID() +
+                " pour vous, " + chauffeur.getFirstName();
+
+        // Envoyez la notification à tous les clients abonnés à "/topic/notifications"
+        messagingTemplate.convertAndSend("/topic/notifications", notificationMessage);
+    }
+
+
+
+    ///////////////////////////////////////////////////////
+
     @Override
    public BigDecimal applyDiscounts(Client user, BigDecimal deliveryPrice) {
        LocalDate today = LocalDate.now();

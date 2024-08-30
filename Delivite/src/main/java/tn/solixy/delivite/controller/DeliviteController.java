@@ -460,7 +460,15 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur lors de l'ajout du Chauffeur.");
         }
     }
-
+    @PostMapping("/creerlivraison")
+    public ResponseEntity<String> creerLivraison(@RequestBody Commandedto request) {
+        try {
+            service.processLivraisonRequest(request);
+            return ResponseEntity.ok("Livraison en cours de traitement");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 
     @PostMapping("/addVehicule")
     public Vehicule addVehicule(@RequestBody Vehicule vehicule) {
@@ -478,14 +486,19 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     public List<Livraison> getAllLivraison(){
         return service.retrieveAllLivraisons();
     }
-    @GetMapping("/getallCommande")
-    public ResponseEntity<List<Commandedto>> getAllLivraisons() {
-        List<Livraison> livraisons = service.retrieveAllLivraisons();
-        List<Commandedto> dtos = livraisons.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+//    @GetMapping("/getallCommande")
+//    public ResponseEntity<List<Commandedto>> getAllLivraisons() {
+//        List<Livraison> livraisons = service.retrieveAllLivraisons();
+//        List<Commandedto> dtos = livraisons.stream()
+//                .map(this::mapToDto)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(dtos);
+//    }
+@PostMapping("/send-notification")
+public ResponseEntity<String> sendNotification(@RequestBody Commandedto request) {
+    service.processLivraisonRequest(request);
+    return ResponseEntity.ok("Notification envoyée");
+}
     @GetMapping("/getallUsers")
     public List<User> getAllUsers(){
         return service.retrieveAllUsers();
@@ -509,31 +522,30 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
         Client updatedClient = service.updateClient(client);
         return ResponseEntity.ok(updatedClient);
     }
-    private Commandedto mapToDto(Livraison livraison) {
-        String vehiculeImmat = ""; // Initialiser avec une valeur par défaut
-        if (livraison.getVehicule() != null ) {
-            // Suppose que nous voulons l'immatriculation du premier véhicule associé
-            vehiculeImmat = livraison.getVehicule().getImmatriculation();
-        }
-
-        return new Commandedto(
-                livraison.getLivraisonID(),
-                livraison.getStatus(),
-                livraison.getType(),
-                livraison.getPaiement(),
-                livraison.getDateCommande(),
-                livraison.getDateLivraison(),
-                livraison.getAdresseLivraison(),
-                livraison.getCli().getFirstName(),
-                livraison.getCli().getLastName(),
-                livraison.getPosition(),
-                livraison.getPrix(),
-                livraison.getDescription(),
-                livraison.getChauf().getFirstName(),
-                livraison.getChauf().getLastName(),
-               livraison.getVehicule().getImmatriculation()
-        );
-    }
+//    private Commandedto mapToDto(Livraison livraison) {
+//        String vehiculeImmat = ""; // Initialiser avec une valeur par défaut
+//        if (livraison.getVehicule() != null ) {
+//            // Suppose que nous voulons l'immatriculation du premier véhicule associé
+//            vehiculeImmat = livraison.getVehicule().getImmatriculation();
+//        }
+//
+//        return new Commandedto(
+//
+//                livraison.getType(),
+//                livraison.getPaiement(),
+//                livraison.getDateCommande(),
+//                livraison.getDateLivraison(),
+//                livraison.getAdresseLivraison(),
+//                livraison.getCli().getFirstName(),
+//                livraison.getCli().getLastName(),
+//                livraison.getPosition(),
+//                livraison.getPrix(),
+//                livraison.getDescription(),
+//                livraison.getChauf().getFirstName(),
+//                livraison.getChauf().getLastName(),
+//               livraison.getVehicule().getImmatriculation()
+//        );
+//    }
     @PutMapping("/updateRestaurant")
     public ResponseEntity<Resto> updateRestaurant(@RequestBody Resto rs) {
         // Logique pour mettre à jour le client

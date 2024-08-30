@@ -9,23 +9,30 @@ import java.util.Date;
 
 public record Commandedto(
 
-   Long livraisonID,
-        StatusLivraison status,
-   TypeLivraison type,
-     TypePayement paiement,
-     Date dateCommande,
-     Date dateLivraison,
-     String adresseLivraison,
-  String clientFirstName,
-    String clientLastName,
-   String position,
-    BigDecimal prix,
-     String description,
-     String chauffeurFirstName,
-    String chauffeurLastName,
-     String vehiculeImmat
+         String restomail,
+         String clientmail,
+        TypeLivraison typelivraison,
+        BigDecimal price,
+       String description
 
 
 
 ) {
+    public String getRestomail() {
+        return restomail;
+    }
+
+    public String getClientmail() {
+        return clientmail;
+    }
+    public TypeLivraison getTypelivraison() {
+        return typelivraison;
+    }
+    public BigDecimal getPrice() {
+        return price;
+    }
+    public String getDescription() {
+        return description;
+    }
+
 }

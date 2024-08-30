@@ -27,9 +27,9 @@ public class Livraison {
     private TypeLivraison type;
     @Enumerated(EnumType.STRING)
     private TypePayement paiement;
-    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dateCommande;
-    @DateTimeFormat(pattern = "YYYY-MM-DD")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dateLivraison;
     private String adresseLivraison;
     @ManyToOne
