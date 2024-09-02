@@ -1,5 +1,6 @@
 package tn.solixy.delivite.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +32,7 @@ public class Chauffeur extends User{
         this.setRole(Role.CHAUFFEUR);
         this.accepted = false;
     }
+
     @OneToMany(mappedBy = "chauf", cascade = CascadeType.ALL)
     private List<Livraison> livraisons = new ArrayList<>();
     public boolean isAccepted() {

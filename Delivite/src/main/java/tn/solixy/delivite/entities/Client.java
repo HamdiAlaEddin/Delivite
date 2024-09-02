@@ -1,5 +1,7 @@
 package tn.solixy.delivite.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,5 +27,6 @@ public class Client  extends User{
         this.setRole(Role.CLIENT);
     }
     @OneToMany(mappedBy = "cli", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Livraison> livraisons = new ArrayList<>();
 }

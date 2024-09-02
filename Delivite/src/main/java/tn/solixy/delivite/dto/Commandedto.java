@@ -12,9 +12,9 @@ public record Commandedto(
          String restomail,
          String clientmail,
         TypeLivraison typelivraison,
-        BigDecimal price,
-       String description
-
+        double price,
+       String description,
+        TypePayement typepayement
 
 
 ) {
@@ -28,7 +28,10 @@ public record Commandedto(
     public TypeLivraison getTypelivraison() {
         return typelivraison;
     }
-    public BigDecimal getPrice() {
+    public TypePayement getTypePayement() {
+        return typepayement();
+    }
+    public double getPrice() {
         return price;
     }
     public String getDescription() {

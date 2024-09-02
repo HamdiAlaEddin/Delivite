@@ -6,11 +6,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.dto.Commandedto;
+import tn.solixy.delivite.dto.LivraisonDto;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.repositories.*;
 import java.io.IOException;
@@ -18,11 +21,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @AllArgsConstructor
 public class GestionDelivite implements IGestionDelivite {
+
 
     ILivraisonRepository iLivraisonRepository;
     IUserRepository iUserRepository;
@@ -31,7 +36,7 @@ public class GestionDelivite implements IGestionDelivite {
      CloudinaryService cloudinaryService;
      IImageRepository imageRepository;
      NoteRepository noteRepository;
-
+ContactRepository gestionContact;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -532,7 +537,7 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
     public Livraison addLivraison(Livraison livraison){
         LocalDate currentDate = LocalDate.now();
         Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        livraison.setDateLivraison(date);
+        livraison.setDateLivraison(currentDate);
         return  iLivraisonRepository.save(livraison);
     }
     @Override
@@ -611,6 +616,14 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
                 .orElse(0.0);
     }
 /////////////////////////////////////////////////////////////
+//@Override
+//public List<LivraisonDto> getAlLivraisons() {
+//    List<Livraison> livraisons = iLivraisonRepository.findAll();
+//    return livraisons.stream()
+//            .map(LivraisonMapper::toDto)
+//            .collect(Collectors.toList());
+//}
+
     @Override
 public void processLivraisonRequest(Commandedto request) {
     // Vérifiez si le client et le restaurant existent
@@ -626,7 +639,8 @@ public void processLivraisonRequest(Commandedto request) {
     livraison.setPrix(request.getPrice());
     livraison.setDescription(request.getDescription());
     livraison.setStatus(StatusLivraison.EnAttente);
-
+    livraison.setPaiement(request.getTypePayement());
+    livraison.setVehicule(getVehiculeById(1L));
     // Trouver un chauffeur disponible et capable
     Chauffeur chauffeur = trouverChauffeurDisponible(livraison);
 
@@ -634,7 +648,12 @@ public void processLivraisonRequest(Commandedto request) {
         // Assignez le chauffeur à la livraison
         livraison.setChauf(chauffeur);
         livraison.setStatus(StatusLivraison.EnRoute);
+        LocalDate currentDate = LocalDate.now();
+        Date registrationDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        livraison.setDateCommande(currentDate);
+        livraison.setPosition(chauffeur.getLocation());
         iLivraisonRepository.save(livraison);
+        client.setDeliveriesCount(client.getDeliveriesCount() + 1);
 
         // Notifiez le chauffeur
         envoyerNotificationAuChauffeur(chauffeur, livraison);
@@ -709,6 +728,115 @@ public void processLivraisonRequest(Commandedto request) {
         chauffeur.setAccepted(!chauffeur.isAccepted());
         return iUserRepository.save(chauffeur);
     }
+    @Override
+    public Chauffeur SetChauffeurdispo(Long id) {
+        Chauffeur chauffeur = (Chauffeur) iUserRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Chauffeur not found"));
+        chauffeur.setDisponible(!chauffeur.isDisponible());
+        return iUserRepository.save(chauffeur);
+    }
+    @Override
+    public LivraisonDto getLivraisonDTOById(Long id) {
+        Livraison livraison = iLivraisonRepository.findById(id).orElse(null);
+        if (livraison != null) {
+            // Assurez-vous que les méthodes appelées sur les objets non nulls
+            return new LivraisonDto(
+                    livraison.getLivraisonID(),
+                    livraison.getStatus() != null ? livraison.getStatus().toString() : null,
+                    livraison.getType() != null ? livraison.getType().toString() : null,
+                    livraison.getPaiement() != null ? livraison.getPaiement().toString() : null,
+                    livraison.getDateCommande(),
+                    livraison.getDateLivraison(),
+                    livraison.getAdresseLivraison(),
+                    livraison.getCli() != null ? livraison.getCli().getFirstName() : null,
+                    livraison.getCli() != null ? livraison.getCli().getPhoneNumber() : null,
+                    livraison.getPosition(),
+                    livraison.getPrix(),
+                    livraison.getDescription(),
+                    livraison.getChauf() != null ? livraison.getChauf().getFirstName() : null,
+                    livraison.getChauf() != null ? livraison.getChauf().getPhoneNumber() : null,
+                    livraison.getVehicule() != null ? livraison.getVehicule().getImmatriculation() : null
+            );
+        }
+        return null;
+    }
+    @Override
+    public List<LivraisonDto> getAllLivraisonDTOs() {
+        List<Livraison> livraisons = iLivraisonRepository.findAll();
+        return livraisons.stream().map(livraison -> new LivraisonDto(
+                livraison.getLivraisonID(),
+                livraison.getStatus() != null ? livraison.getStatus().toString() : null,
+                livraison.getType() != null ? livraison.getType().toString() : null,
+                livraison.getPaiement() != null ? livraison.getPaiement().toString() : null,
+                livraison.getDateCommande(),
+                livraison.getDateLivraison(),
+                livraison.getAdresseLivraison(),
+                livraison.getCli() != null ? livraison.getCli().getFirstName() : null,
+                livraison.getCli() != null ? livraison.getCli().getPhoneNumber() : null,
+                livraison.getPosition(),
+                livraison.getPrix(),
+                livraison.getDescription(),
+                livraison.getChauf() != null ? livraison.getChauf().getFirstName() : null,
+                livraison.getChauf() != null ? livraison.getChauf().getPhoneNumber() : null,
+                livraison.getVehicule() != null ? livraison.getVehicule().getImmatriculation() : null
+        )).collect(Collectors.toList());
+    }
+    @Override
+    public List<LivraisonDto> getLivraisonsByUserId(Long userId) {
+        // Utiliser l'une des méthodes du repository pour récupérer les livraisons
+        List<Livraison> livraisons = iLivraisonRepository.findBylivraisonbyUserId(userId);
 
+        // Mapper les entités Livraison en DTOs
+        return livraisons.stream().map(livraison -> new LivraisonDto(
+                livraison.getLivraisonID(),
+                livraison.getStatus() != null ? livraison.getStatus().toString() : null,
+                livraison.getType() != null ? livraison.getType().toString() : null,
+                livraison.getPaiement() != null ? livraison.getPaiement().toString() : null,
+                livraison.getDateCommande(),
+                livraison.getDateLivraison(),
+                livraison.getAdresseLivraison(),
+                livraison.getCli() != null ? livraison.getCli().getFirstName() : null,
+                livraison.getCli() != null ? livraison.getCli().getPhoneNumber() : null,
+                livraison.getPosition(),
+                livraison.getPrix(),
+                livraison.getDescription(),
+                livraison.getChauf() != null ? livraison.getChauf().getFirstName() : null,
+                livraison.getChauf() != null ? livraison.getChauf().getPhoneNumber() : null,
+                livraison.getVehicule() != null ? livraison.getVehicule().getImmatriculation() : null
+        )).collect(Collectors.toList());
+    }
+    @Override
+    public Contact addcontact(Contact contact) {
+        contact.setDate(LocalDate.now());
+         String email= contact.getMail();
+          sendContactNotification(email);
+        return gestionContact.save(contact);
+    }
+
+    @Override
+    public void removeContact(Long id_contact) {
+        gestionContact.deleteById(id_contact);
+
+    }
+
+    @Override
+    public List<Contact> retrieveContact() {
+        return gestionContact.findAllByOrderByDateDesc();
+    }
+    @Autowired
+    private JavaMailSender emailSender;
+    public  void sendContactNotification(String toEmail) {
+        SimpleMailMessage message  = new SimpleMailMessage();
+        message.setFrom("*-----*-----*----*");
+        message.setSubject("Confirmation de réception de votre Contact");
+        message.setTo(toEmail);
+        message.setText(  "\"Cher utilisateur,\" \n" +
+                "                \"Nous avons bien reçu votre CONTACT et nous vous en remercions. Votre opinion est précieuse pour nous \" \n" +
+                "                \"et nous l'utiliserons pour améliorer nos services. Si vous avez d'autres questions ou commentaires, \" \n" +
+                "                \"n'hésitez pas à nous contacter.\"\n" +
+                "                \"Cordialement,\" \n" +
+                "                \"DELIVITE\"");
+        emailSender.send(message);
+    }
 }
 

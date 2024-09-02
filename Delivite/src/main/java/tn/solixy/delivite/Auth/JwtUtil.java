@@ -64,9 +64,27 @@ public class JwtUtil {
         return Objects.equals(parseJwtClaims(token).getAudience(), "password");
     }
 
-    public String getEmailFromToken(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException{
-        Claims c = parseJwtClaims(token);
-        return c.getSubject();
+    public String getEmailFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secret_key) // Assurez-vous que secretKey est bien configuré
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject(); // Récupère l'email (ou l'identifiant utilisateur) du token
+        } catch (JwtException | IllegalArgumentException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public Claims extractClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(secret_key)
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public Long extractUserId(String token) {
+        return Long.parseLong(extractClaims(token).get("userId", String.class));
     }
     private Claims parseJwtClaims(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
         return jwtParser.parseClaimsJws(token).getBody();

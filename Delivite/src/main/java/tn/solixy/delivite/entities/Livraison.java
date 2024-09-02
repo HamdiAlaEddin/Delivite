@@ -1,5 +1,6 @@
 package tn.solixy.delivite.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -28,22 +30,24 @@ public class Livraison {
     @Enumerated(EnumType.STRING)
     private TypePayement paiement;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date dateCommande;
+    private LocalDate dateCommande;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date dateLivraison;
+    private LocalDate dateLivraison;
     private String adresseLivraison;
     @ManyToOne
     @JoinColumn(name = "id_client")
+    @JsonIgnore
     private Client cli;
     private String position;//GPS
-    private BigDecimal prix;
+    private double prix;
     private String description;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "id_chauffeur")
     private Chauffeur chauf;
+    @JsonIgnore
     @ManyToOne
     private Vehicule vehicule;
     @OneToMany(mappedBy = "livr")
-    @JsonIgnore
     private List<LogHisorique> loghs;
 }

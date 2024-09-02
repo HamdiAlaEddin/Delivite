@@ -2,6 +2,7 @@ package tn.solixy.delivite.services;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.dto.Commandedto;
+import tn.solixy.delivite.dto.LivraisonDto;
 import tn.solixy.delivite.entities.*;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -54,4 +55,13 @@ public interface IGestionDelivite {
                                                    String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number) ;
      ResponseEntity<String> addChauffeurWithImage(String userType, String firstName, String lastName, String password, String email,
                                                         String preferredLanguage, String location, MultipartFile imageFile, String address, Date date_of_birth, String phone_number, String numPermisConduit);
+
+     Chauffeur SetChauffeurdispo(Long id);
+     LivraisonDto getLivraisonDTOById(Long id);
+    List<LivraisonDto> getAllLivraisonDTOs();
+    List<LivraisonDto> getLivraisonsByUserId(Long userId);
+     Contact addcontact(Contact contact);
+    void removeContact(Long id_contact);
+    List<Contact> retrieveContact();
+    void sendContactNotification(String toEmail);
 }

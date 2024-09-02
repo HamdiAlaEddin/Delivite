@@ -2,11 +2,13 @@ package tn.solixy.delivite.services;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import java.util.Properties;
 
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = false)
 public class mailconfig {
    @Bean
     public JavaMailSender getJavaMailSender() {

@@ -1,6 +1,7 @@
 package tn.solixy.delivite.controller;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -18,10 +19,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.solixy.delivite.Auth.JwtUtil;
-import tn.solixy.delivite.dto.Commandedto;
+import tn.solixy.delivite.dto.*;
 
-import tn.solixy.delivite.dto.LoginRequest;
-import tn.solixy.delivite.dto.ResetPasswordRequest;
 import tn.solixy.delivite.entities.*;
 import tn.solixy.delivite.services.*;
 
@@ -120,13 +119,35 @@ public class DeliviteController {
         map.put("token",token);
         return new ResponseEntity<Object>(map, HttpStatus.CREATED);
     }
-    @PostMapping("/user/getbytoken")
-    public User getUserByToken(@RequestBody String token) {
-        String email = jwt.getEmailFromToken(token);
-        return service.getUserByEmail(email);
+    @PostMapping("/getbytoken")
+    public ResponseEntity<User> getUserByToken(@RequestBody Map<String, String> payload) {
+        String token = payload.get("token");
+        System.out.println("Received token: " + token); // Ajouter un log pour vérifier le token
+        if (token == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        try {
+            String email = jwt.getEmailFromToken(token);
+            System.out.println("Email extracted from token: " + email); // Ajouter un log pour vérifier l'email extrait
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            User user = service.getUserByEmail(email);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(user);
+        } catch (JwtException | IllegalArgumentException e) {
+            e.printStackTrace(); // Ajouter un log pour les exceptions
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
-    @PostMapping("/user/getClbytok")
+
+            @PostMapping("/user/getClbytok")
     public ResponseEntity getusByToken(@RequestBody String token) {
+
         String email = jwt.getEmailFromToken(token);
         User user = service.getUserByEmail(email);
         Map<String, Object> map = new HashMap<String, Object>();
@@ -482,23 +503,16 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     public LogHisorique addLogLivraison(@RequestBody LogHisorique logHisorique) {
         return service.addLog(logHisorique);
     }
-    @GetMapping("/getallLivraison")
+    @GetMapping("/getallCommande")
     public List<Livraison> getAllLivraison(){
         return service.retrieveAllLivraisons();
     }
-//    @GetMapping("/getallCommande")
-//    public ResponseEntity<List<Commandedto>> getAllLivraisons() {
-//        List<Livraison> livraisons = service.retrieveAllLivraisons();
-//        List<Commandedto> dtos = livraisons.stream()
-//                .map(this::mapToDto)
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(dtos);
-//    }
-@PostMapping("/send-notification")
-public ResponseEntity<String> sendNotification(@RequestBody Commandedto request) {
+
+    @PostMapping("/send-notification")
+    public ResponseEntity<String> sendNotification(@RequestBody Commandedto request) {
     service.processLivraisonRequest(request);
     return ResponseEntity.ok("Notification envoyée");
-}
+    }
     @GetMapping("/getallUsers")
     public List<User> getAllUsers(){
         return service.retrieveAllUsers();
@@ -522,6 +536,12 @@ public ResponseEntity<String> sendNotification(@RequestBody Commandedto request)
         Client updatedClient = service.updateClient(client);
         return ResponseEntity.ok(updatedClient);
     }
+//    @GetMapping("/getlivraisons")
+//    public ResponseEntity<List<LivraisonDto>> getAllLivraisons() {
+//        List<LivraisonDto> livraisons = service.getAlLivraisons();
+//        return ResponseEntity.ok(livraisons);
+//    }
+
 //    private Commandedto mapToDto(Livraison livraison) {
 //        String vehiculeImmat = ""; // Initialiser avec une valeur par défaut
 //        if (livraison.getVehicule() != null ) {
@@ -554,7 +574,6 @@ public ResponseEntity<String> sendNotification(@RequestBody Commandedto request)
     }
     @PutMapping("/updateChauffeur")
     public ResponseEntity<Chauffeur> updateChauffeur(@RequestBody Chauffeur chauffeur) {
-        // Logique pour mettre à jour le chauffeur
         Chauffeur updatedChauffeur = service.updateChauffeur(chauffeur);
         return ResponseEntity.ok(updatedChauffeur);
     }
@@ -564,9 +583,6 @@ public ResponseEntity<String> sendNotification(@RequestBody Commandedto request)
         Admin updatedAdmin = service.updateAdmin(admin);
         return ResponseEntity.ok(updatedAdmin);
     }
-
-
-
     @PutMapping("/updateVehicule")
     public Vehicule updateVehicule(@RequestBody Vehicule vehicule){
         return  service.updateVehicule(vehicule);
@@ -601,5 +617,39 @@ public ResponseEntity<String> sendNotification(@RequestBody Commandedto request)
     @PutMapping("/accept-chauffeur/{id}")
     public Chauffeur acceptChauffeur(@PathVariable Long id) {
         return service.acceptChauffeur(id);
+    }
+    @PutMapping("/dispo-chauffeur/{id}")
+    public Chauffeur setdispochauf(@PathVariable Long id) {
+        return service.SetChauffeurdispo(id);
+    }
+    @GetMapping("/livraison/{id}")
+    public ResponseEntity<LivraisonDto> getLivraison(@PathVariable Long id) {
+        LivraisonDto livraisonDTO = service.getLivraisonDTOById(id);
+        if (livraisonDTO == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(livraisonDTO);
+    }
+    @GetMapping("/getAllLivraison")
+    public ResponseEntity<List<LivraisonDto>> getAllLivraisons() {
+        List<LivraisonDto> livraisons = service.getAllLivraisonDTOs();
+        return new ResponseEntity<>(livraisons, HttpStatus.OK);
+    }
+    @GetMapping("/getlivraison/{userId}")
+    public ResponseEntity<List<LivraisonDto>> getLivraisonsByUserId(@PathVariable Long userId) {
+        List<LivraisonDto> livraisons = service.getLivraisonsByUserId(userId);
+        return new ResponseEntity<>(livraisons, HttpStatus.OK);
+    }
+    @PostMapping("/addContact")
+    public Contact Addcontact(@RequestBody Contact contact){
+        return service.addcontact(contact);
+    }
+    @DeleteMapping("/deletecontact/{id}")
+    public void deletecontact(@PathVariable("id") Long id_contact){
+        service.removeContact(id_contact);
+    }
+    @GetMapping("/getconatct")
+    public List<Contact> getAllConatct(){
+        return service.retrieveContact();
     }
 }

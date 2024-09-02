@@ -27,10 +27,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/Delivite/addUser", "/Delivite/addRestaurant", "/Delivite/authenticate_user", "/Delivite/resetpassword", "/Delivite/resetpasswordrequest").permitAll() // Ces chemins sont accessibles à tous
+                        .requestMatchers("/Delivite/addUser", "/Delivite/getbytoken","/Delivite/addRestaurant", "/Delivite/authenticate_user", "/Delivite/resetpassword", "/Delivite/resetpasswordrequest").permitAll() // Ces chemins sont accessibles à tous
                         .requestMatchers("/Delivite/admin/**", "/admin/**").hasRole("ADMIN") // Chemins spécifiques au rôle ADMIN
                         .requestMatchers("/Delivite/user/**", "/user/**").hasAnyRole("RESTO", "CLIENT", "CHAUFFEUR")
-                 //       .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                        .requestMatchers("/Delivite/getbytoken").permitAll()
+                       // .requestMatchers("/Delivite/admin/accept-chauffeur/**").permitAll()
+                        .requestMatchers("/Delivite//getAllLivraison").permitAll()
+                        //       .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
