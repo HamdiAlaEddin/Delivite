@@ -16,7 +16,7 @@ import java.util.List;
 @DiscriminatorValue("CHAUFFEUR")
 public class Chauffeur extends User{
     @Column(name = "disponible", nullable = true)
-    private boolean disponible = false;
+    private boolean disponible = true;
     @Column(name = "accepted", nullable = true)
     private boolean accepted = false;
     @Column(name = "num_permis_conduit", nullable = true)
