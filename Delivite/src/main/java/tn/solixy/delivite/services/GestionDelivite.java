@@ -546,6 +546,16 @@ public ResponseEntity<String> addUserWithImage(String userType, String firstName
     }
     @Override
     public LogHisorique addLog(LogHisorique lh) {
+        Livraison livrai = iLivraisonRepository.findById(lh.getLivr().getLivraisonID())
+                .orElseThrow(() -> new EntityNotFoundException("Livraison not found"));
+        Vehicule vehicule = iVehiculeRepository.findById(lh.getVehic().getVehiculeID())
+                .orElseThrow(() -> new EntityNotFoundException("Vehicule not found"));
+
+        // Assigner les entités au LogHistorique
+        lh.setLivr(livrai);
+        lh.setVehic(vehicule);
+
+        // Sauvegarder le LogHistorique
         return iLogHistorique.save(lh);
     }
     @Override

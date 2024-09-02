@@ -2,6 +2,7 @@ package tn.solixy.delivite.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -48,6 +49,7 @@ public class Livraison {
     @JsonIgnore
     @ManyToOne
     private Vehicule vehicule;
+    @JsonManagedReference
     @OneToMany(mappedBy = "livr")
     private List<LogHisorique> loghs;
 }

@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,9 @@ import tn.solixy.delivite.Auth.JwtUtil;
 import tn.solixy.delivite.dto.*;
 
 import tn.solixy.delivite.entities.*;
+import tn.solixy.delivite.repositories.ILivraisonRepository;
+import tn.solixy.delivite.repositories.ILogHistorique;
+import tn.solixy.delivite.repositories.IVehiculeRepository;
 import tn.solixy.delivite.services.*;
 
 import java.text.SimpleDateFormat;
@@ -499,10 +503,33 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     public Livraison addLivraison(@RequestBody Livraison livraison) {
         return service.addLivraison(livraison);
     }
+//    @PostMapping("/addLogLivraison")
+//    public LogHisorique addLogLivraison(@RequestBody LogHisorique logHisorique) {
+//        return service.addLog(logHisorique);
+//    }
+    @Autowired
+    ILivraisonRepository livraisonRepository ;
+    @Autowired
+    IVehiculeRepository vehiculeRepository ;
+    @Autowired
+    ILogHistorique logHistoriqueRepository ;
     @PostMapping("/addLogLivraison")
-    public LogHisorique addLogLivraison(@RequestBody LogHisorique logHisorique) {
-        return service.addLog(logHisorique);
-    }
+public ResponseEntity<LogHisorique> createLog(@RequestBody LogHisorique logHistoriqueDTO) {
+    Livraison livraison = livraisonRepository.findById(logHistoriqueDTO.getLivr().getLivraisonID())
+            .orElseThrow(() -> new ResourceNotFoundException("Livraison not found"));
+    Vehicule vehicule = vehiculeRepository.findById(logHistoriqueDTO.getVehic().getVehiculeID())
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicule not found"));
+
+    LogHisorique logHistorique = new LogHisorique();
+    logHistorique.setDescription(logHistoriqueDTO.getDescription());
+    logHistorique.setIncident(logHistoriqueDTO.getIncident());
+    logHistorique.setLivr(livraison);
+    logHistorique.setVehic(vehicule);
+
+    logHistoriqueRepository.save(logHistorique);
+
+    return ResponseEntity.ok(logHistorique);
+}
     @GetMapping("/getallCommande")
     public List<Livraison> getAllLivraison(){
         return service.retrieveAllLivraisons();
@@ -603,7 +630,7 @@ public ResponseEntity<Map<String, Object>> addUserWithImage(
     public void deleteL(@PathVariable("id") Long LID){
         service.DeleteLivraison(LID);
     }
-    @DeleteMapping("/deleteLogHistorique/{id}")
+   @DeleteMapping("/deleteLogHistorique/{id}")
     public void deleteLog(@PathVariable("id") Long LogID){
         service.DeleteLog(LogID);
     }
